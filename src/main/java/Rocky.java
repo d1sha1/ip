@@ -1,10 +1,10 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Rocky {
     private static final String LINE =
             "    ____________________________________________________________";
-    private static final Task[] tasks = new Task[100];
-    private static int count = 0;
+    private static final ArrayList<Task> tasks = new ArrayList<>();
 
     public static void main(String[] args) {
         String banner =
@@ -38,6 +38,8 @@ public class Rocky {
                     setDone(input, true);
                 } else if (commandWord.equals("unmark")) {
                     setDone(input, false);
+                } else if (commandWord.equals("delete")) {
+                    deleteTask(input);
                 } else {
                     TaskType type = TaskType.fromKeyword(commandWord);
                     if (type != null) {
@@ -58,9 +60,13 @@ public class Rocky {
     }
 
     private static void printList() {
+        if (tasks.isEmpty()) {
+            System.out.println("     Your list is empty. Add something!");
+            return;
+        }
         System.out.println("     Here are the tasks in your list:");
-        for (int i = 0; i < count; i++) {
-            System.out.println("     " + (i + 1) + "." + tasks[i]);
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println("     " + (i + 1) + "." + tasks.get(i));
         }
     }
 
@@ -112,23 +118,42 @@ public class Rocky {
                 return;
         }
 
-        if (count >= tasks.length) {
-            throw new RockyException("My list is full, I can't take any more tasks.");
-        }
-
-        tasks[count] = task;
-        count++;
+        tasks.add(task);
         System.out.println("     Got it. I've added this task:");
         System.out.println("       " + task);
-        System.out.println("     Now you have " + count
-                + (count == 1 ? " task" : " tasks") + " in the list.");
+        System.out.println("     Now you have " + describeCount() + " in the list.");
+    }
+
+    private static void deleteTask(String input) throws RockyException {
+        int index = parseIndex(input);
+        Task removed = tasks.remove(index);
+        System.out.println("     Noted. I've removed this task:");
+        System.out.println("       " + removed);
+        System.out.println("     Now you have " + describeCount() + " in the list.");
     }
 
     private static void setDone(String input, boolean done) throws RockyException {
+        int index = parseIndex(input);
+        Task task = tasks.get(index);
+
+        if (done) {
+            task.mark();
+            System.out.println("     Nice! I've marked this task as done:");
+        } else {
+            task.unmark();
+            System.out.println("     OK, I've marked this task as not done yet:");
+        }
+        System.out.println("       " + task);
+    }
+
+    /** Extracts and validates a 1-based task number, returning a 0-based index. */
+    private static int parseIndex(String input) throws RockyException {
         String[] parts = input.split(" ", 2);
+        String command = parts[0];
+
         if (parts.length < 2 || parts[1].trim().isEmpty()) {
             throw new RockyException(
-                    "Which task? Give me a number, like: " + parts[0] + " 2");
+                    "Which task? Give me a number, like: " + command + " 2");
         }
 
         int index;
@@ -139,22 +164,18 @@ public class Rocky {
                     "\"" + parts[1].trim() + "\" isn't a number I can work with.");
         }
 
-        if (index < 0 || index >= count) {
-            throw new RockyException(count == 0
-                    ? "Your list is empty, so there's nothing to " + parts[0] + "."
-                    : "You only have " + count + " task(s), so there's no #"
+        if (index < 0 || index >= tasks.size()) {
+            throw new RockyException(tasks.isEmpty()
+                    ? "Your list is empty, so there's nothing to " + command + "."
+                    : "You only have " + tasks.size() + " task(s), so there's no #"
                     + (index + 1) + ".");
         }
 
-        Task task = tasks[index];
+        return index;
+    }
 
-        if (done) {
-            task.mark();
-            System.out.println("     Nice! I've marked this task as done:");
-        } else {
-            task.unmark();
-            System.out.println("     OK, I've marked this task as not done yet:");
-        }
-        System.out.println("       " + task);
+    private static String describeCount() {
+        int n = tasks.size();
+        return n + (n == 1 ? " task" : " tasks");
     }
 }
