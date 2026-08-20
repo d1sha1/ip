@@ -28,14 +28,28 @@ public class Rocky {
                 System.out.println("     Bye. Hope to see you again soon!");
                 System.out.println(line);
                 break;
-            } else if (input.equals("list")){
+            } else if (input.equals("list")) {
                 for (String item : storage) {
                     if (item != null) {
                         System.out.println(item);
                     }
                 }
+            } else if (input.startsWith("mark")) {
+                String number = input.substring(input.lastIndexOf(' ') + 1);
+                int key = Integer.parseInt(number);
+                storage[key - 1] = key + "." + "[X] " + storage[key - 1].substring(6);
+                System.out.println(" Nice! I've marked this task as done:");
+                System.out.println(storage[key - 1]);
+
+            } else if (input.startsWith("unmark")) {
+                String number = input.substring(input.lastIndexOf(' ') + 1);
+                int key = Integer.parseInt(number);
+                storage[key - 1] = key + ". " + "[ ] " + storage[key - 1].substring(6);
+                System.out.println(" Nice! I've unmarked this task as done:");
+                System.out.println(storage[key - 1]);
+
             } else {
-                storage[counter] = (counter + 1) + ". " + input;
+                storage[counter] = (counter + 1) + ". [ ] " + input;
                 counter++;
                 System.out.println("     " + "added: "+ input);
                 System.out.println(line);
