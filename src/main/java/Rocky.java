@@ -2,6 +2,7 @@ import java.util.Scanner;
 
 public class Rocky {
     public static void main(String[] args) {
+        String[] storage = new String[100];
         String banner =
                 " ____   ___   ____ _  ______   __\n"
                         + "|  _ \\ / _ \\ / ___| |/ /\\ \\ / /\n"
@@ -18,7 +19,7 @@ public class Rocky {
         System.out.println(line);
 
         Scanner scanner = new Scanner(System.in);
-
+        int counter = 0;
         while (true) {
             String input = scanner.nextLine();
             System.out.println(line);
@@ -27,8 +28,16 @@ public class Rocky {
                 System.out.println("     Bye. Hope to see you again soon!");
                 System.out.println(line);
                 break;
+            } else if (input.equals("list")){
+                for (String item : storage) {
+                    if (item != null) {
+                        System.out.println(item);
+                    }
+                }
             } else {
-                System.out.println("     " + input);
+                storage[counter] = (counter + 1) + ". " + input;
+                counter++;
+                System.out.println("     " + "added: "+ input);
                 System.out.println(line);
             }
         }
