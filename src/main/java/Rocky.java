@@ -1,12 +1,22 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+
 
 public class Rocky {
     private static final String LINE =
             "    ____________________________________________________________";
     private static final ArrayList<Task> tasks = new ArrayList<>();
+    private static final String DATA_DIR = "data";
+    private static final String DATA_FILE = "duke.txt";
 
     public static void main(String[] args) {
+        // Load any previously saved tasks before greeting the user.
+        load();
+
         String banner =
                 " ____   ___   ____ _  ______   __\n"
                         + "|  _ \\ / _ \\ / ___| |/ /\\ \\ / /\n"
@@ -119,6 +129,7 @@ public class Rocky {
         }
 
         tasks.add(task);
+        save();
         System.out.println("     Got it. I've added this task:");
         System.out.println("       " + task);
         System.out.println("     Now you have " + describeCount() + " in the list.");
@@ -127,6 +138,7 @@ public class Rocky {
     private static void deleteTask(String input) throws RockyException {
         int index = parseIndex(input);
         Task removed = tasks.remove(index);
+        save();
         System.out.println("     Noted. I've removed this task:");
         System.out.println("       " + removed);
         System.out.println("     Now you have " + describeCount() + " in the list.");
@@ -143,6 +155,7 @@ public class Rocky {
             task.unmark();
             System.out.println("     OK, I've marked this task as not done yet:");
         }
+        save();
         System.out.println("       " + task);
     }
 
@@ -178,4 +191,90 @@ public class Rocky {
         int n = tasks.size();
         return n + (n == 1 ? " task" : " tasks");
     }
+
+    private static void load() {
+        File file = new File(DATA_DIR, DATA_FILE);
+        if (!file.exists()) {
+            return;
+        }
+
+        try (Scanner fileScanner = new Scanner(file)) {
+            while (fileScanner.hasNextLine()) {
+                String line = fileScanner.nextLine().trim();
+                if (!line.isEmpty()) {
+                    tasks.add(lineToTask(line));
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("     Warning: couldn't read saved tasks.");
+        }
+    }
+
+    private static void save() {
+        try {
+            File file = ensureDataFile(DATA_DIR, DATA_FILE);
+            try (FileWriter writer = new FileWriter(file)) {
+                for (Task task : tasks) {
+                    writer.write(taskToLine(task) + System.lineSeparator());
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("     Warning: couldn't save tasks (" + e.getMessage() + ").");
+        }
+    }
+
+    private static String taskToLine(Task task) {
+        String done = task.isDone() ? "1" : "0";
+        String line = " | " + done + " | " + task.getDescription();
+
+        if (task instanceof Deadline) {
+            Deadline deadline = (Deadline) task;
+            return "D" + line + " | " + deadline.getDate();
+        } else if (task instanceof Event) {
+            Event event = (Event) task;
+            return "E" + line + " | " + event.getStartDate() + " | " + event.getEndDate();
+        } else {
+            return "T" + line;
+        }
+    }
+
+    private static Task lineToTask(String line) {
+        String[] parts = line.split("\\|");
+        String type = parts[0].trim();
+        boolean isDone = parts[1].trim().equals("1");
+        String description = parts[2].trim();
+
+        Task task;
+        switch (type) {
+            case "D":
+                task = new Deadline(description, parts[3].trim());
+                break;
+            case "E":
+                task = new Event(description, parts[3].trim(), parts[4].trim());
+                break;
+            default:
+                task = new ToDo(description);
+                break;
+        }
+
+        if (isDone) {
+            task.mark();
+        }
+        return task;
+    }
+
+    private static File ensureDataFile(String folderName, String fileName) throws IOException {
+        File folder = new File(folderName);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+
+        File file = new File(folder, fileName);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+
+        return file;
+    }
+
 }
