@@ -8,6 +8,16 @@ public class Event extends Task {
         this.endDate = endDate;
     }
 
+    /** Returns the start time, used when saving to disk. */
+    public String getStartDate() {
+        return this.startDate;
+    }
+
+    /** Returns the end time, used when saving to disk. */
+    public String getEndDate() {
+        return this.endDate;
+    }
+
     @Override
     public String toString() {
         return "[E]" + super.toString() + " (from: " + this.startDate

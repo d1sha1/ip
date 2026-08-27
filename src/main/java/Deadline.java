@@ -6,6 +6,11 @@ public class Deadline extends Task{
         this.date = date;
     }
 
+    /** Returns the due date, used when saving to disk. */
+    public String getDate() {
+        return this.date;
+    }
+
     @Override
     public String toString() {
         return "[D]" + super.toString() + "(by: " + this.date + ")";
