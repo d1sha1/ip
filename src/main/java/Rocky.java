@@ -202,7 +202,11 @@ public class Rocky {
             while (fileScanner.hasNextLine()) {
                 String line = fileScanner.nextLine().trim();
                 if (!line.isEmpty()) {
-                    tasks.add(lineToTask(line));
+                    try {
+                        tasks.add(lineToTask(line));
+                    } catch (RockyException e) {
+                        System.out.println("     Warning: skipped an unreadable saved task.");
+                    }
                 }
             }
         } catch (FileNotFoundException e) {
@@ -238,7 +242,7 @@ public class Rocky {
         }
     }
 
-    private static Task lineToTask(String line) {
+    private static Task lineToTask(String line) throws RockyException {
         String[] parts = line.split("\\|");
         String type = parts[0].trim();
         boolean isDone = parts[1].trim().equals("1");

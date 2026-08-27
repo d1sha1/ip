@@ -19,12 +19,10 @@ public abstract class Task {
         return this.isDone ? "[x]" : "[ ]";
     }
 
-    /** Returns the task description, used when saving to disk. */
     public String getDescription(){
         return this.description;
     }
 
-    /** Returns whether the task is done, used when saving to disk. */
     public boolean isDone(){
         return this.isDone;
     }
