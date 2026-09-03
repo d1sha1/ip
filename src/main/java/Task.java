@@ -14,18 +14,18 @@ public abstract class Task {
      * @param description what the task is, e.g. "read book".
      * @param isDone whether the task starts out already marked done.
      */
-    public Task(String description, Boolean isDone){
+    public Task(String description, Boolean isDone) {
         this.description = description;
         this.isDone = isDone;
     }
 
     /** Marks this task as done. */
-    public void mark(){
+    public void mark() {
         this.isDone = true;
     }
 
     /** Marks this task as not done. */
-    public void unmark(){
+    public void unmark() {
         this.isDone = false;
     }
 
@@ -34,7 +34,7 @@ public abstract class Task {
      *
      * @return "[x]" if this task is done, "[ ]" otherwise.
      */
-    public String getCheckbox(){
+    public String getCheckbox() {
         return this.isDone ? "[x]" : "[ ]";
     }
 
@@ -43,7 +43,7 @@ public abstract class Task {
      *
      * @return the description passed to the constructor.
      */
-    public String getDescription(){
+    public String getDescription() {
         return this.description;
     }
 
@@ -53,7 +53,7 @@ public abstract class Task {
      * @return true if {@link #mark()} was called more recently than {@link #unmark()}
      *     (or the task was constructed already done); false otherwise.
      */
-    public boolean isDone(){
+    public boolean isDone() {
         return this.isDone;
     }
 
