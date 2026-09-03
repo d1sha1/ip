@@ -1,18 +1,22 @@
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
 /**
- * A JavaFX GUI for Rocky, starting from the standard SE-EDU HelloWorld example.
+ * A JavaFX GUI for Rocky: a chat window that accepts the same text commands
+ * as the original text UI.
  */
 public class Main extends Application {
+    private static final double MIN_WIDTH = 360;
+    private static final double MIN_HEIGHT = 400;
 
     @Override
     public void start(Stage stage) {
-        Label helloWorld = new Label("Hello World!");
-        Scene scene = new Scene(helloWorld);
+        Scene scene = new Scene(new MainWindow());
 
+        stage.setTitle("Rocky");
+        stage.setMinWidth(MIN_WIDTH);
+        stage.setMinHeight(MIN_HEIGHT);
         stage.setScene(scene);
         stage.show();
     }
