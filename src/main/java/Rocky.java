@@ -10,7 +10,7 @@ public class Rocky {
 
         while (true) {
             String input = ui.readCommand();
-            String commandWord = input.split(" ", 2)[0];
+            String commandWord = Parser.getCommandWord(input);
             ui.showLine();
 
             try {
@@ -50,51 +50,9 @@ public class Rocky {
     }
 
     private static void addTask(TaskType type, String input) throws RockyException {
-        String body = input.length() > type.getKeyword().length()
-                ? input.substring(type.getKeyword().length()).trim()
-                : "";
-
-        if (body.isEmpty()) {
-            throw new RockyException(
-                    "A " + type.getKeyword() + " needs a description. Try again?");
-        }
-
-        Task task;
-
-        switch (type) {
-            case TODO:
-                task = new ToDo(body);
-                break;
-            case DEADLINE: {
-                String[] parts = body.split(" /by ", 2);
-                if (parts.length < 2 || parts[0].trim().isEmpty()
-                        || parts[1].trim().isEmpty()) {
-                    throw new RockyException(
-                            "A deadline needs a due date. Format: "
-                                    + "deadline <task> /by <when>");
-                }
-                task = new Deadline(parts[0].trim(), parts[1].trim());
-                break;
-            }
-            case EVENT: {
-                String[] fromParts = body.split(" /from ", 2);
-                if (fromParts.length < 2 || fromParts[0].trim().isEmpty()) {
-                    throw new RockyException(
-                            "An event needs a start time. Format: "
-                                    + "event <task> /from <start> /to <end>");
-                }
-                String[] toParts = fromParts[1].split(" /to ", 2);
-                if (toParts.length < 2 || toParts[0].trim().isEmpty()
-                        || toParts[1].trim().isEmpty()) {
-                    throw new RockyException(
-                            "An event needs an end time. Format: "
-                                    + "event <task> /from <start> /to <end>");
-                }
-                task = new Event(fromParts[0].trim(), toParts[0].trim(), toParts[1].trim());
-                break;
-            }
-            default:
-                return;
+        Task task = Parser.parseNewTask(type, input);
+        if (task == null) {
+            return;
         }
 
         tasks.add(task);
@@ -103,14 +61,14 @@ public class Rocky {
     }
 
     private static void deleteTask(String input) throws RockyException {
-        int index = parseIndex(input);
+        int index = Parser.parseIndex(input, tasks.size());
         Task removed = tasks.delete(index);
         storage.save(tasks);
         ui.showTaskRemoved(removed, tasks.size());
     }
 
     private static void setDone(String input, boolean done) throws RockyException {
-        int index = parseIndex(input);
+        int index = Parser.parseIndex(input, tasks.size());
         Task task = tasks.get(index);
 
         if (done) {
@@ -125,34 +83,6 @@ public class Rocky {
         } else {
             ui.showTaskUnmarked(task);
         }
-    }
-
-    /** Extracts and validates a 1-based task number, returning a 0-based index. */
-    private static int parseIndex(String input) throws RockyException {
-        String[] parts = input.split(" ", 2);
-        String command = parts[0];
-
-        if (parts.length < 2 || parts[1].trim().isEmpty()) {
-            throw new RockyException(
-                    "Which task? Give me a number, like: " + command + " 2");
-        }
-
-        int index;
-        try {
-            index = Integer.parseInt(parts[1].trim()) - 1;
-        } catch (NumberFormatException e) {
-            throw new RockyException(
-                    "\"" + parts[1].trim() + "\" isn't a number I can work with.");
-        }
-
-        if (index < 0 || index >= tasks.size()) {
-            throw new RockyException(tasks.isEmpty()
-                    ? "Your list is empty, so there's nothing to " + command + "."
-                    : "You only have " + tasks.size() + " task(s), so there's no #"
-                    + (index + 1) + ".");
-        }
-
-        return index;
     }
 
 }
