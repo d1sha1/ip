@@ -66,6 +66,8 @@ public class Rocky {
                     setDone(input, false);
                 } else if (commandWord.equals("delete")) {
                     deleteTask(input);
+                } else if (commandWord.equals("find")) {
+                    findTasks(input);
                 } else {
                     TaskType type = TaskType.fromKeyword(commandWord);
                     if (type != null) {
@@ -94,6 +96,40 @@ public class Rocky {
         System.out.println("     Here are the tasks in your list:");
         for (int i = 0; i < tasks.size(); i++) {
             System.out.println("     " + (i + 1) + "." + tasks.get(i));
+        }
+    }
+
+    /**
+     * Finds and prints every task whose description contains the given
+     * keyword (case-insensitive), e.g. "find book".
+     *
+     * @param input the full "find ..." command line.
+     * @throws RockyException if no keyword is given.
+     */
+    private static void findTasks(String input) throws RockyException {
+        String keyword = input.length() > "find".length()
+                ? input.substring("find".length()).trim()
+                : "";
+
+        if (keyword.isEmpty()) {
+            throw new RockyException(
+                    "What should I search for? Try again, e.g.: find book");
+        }
+
+        ArrayList<Task> matches = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.getDescription().toLowerCase().contains(keyword.toLowerCase())) {
+                matches.add(task);
+            }
+        }
+
+        if (matches.isEmpty()) {
+            System.out.println("     No matching tasks found.");
+            return;
+        }
+        System.out.println("     Here are the matching tasks in your list:");
+        for (int i = 0; i < matches.size(); i++) {
+            System.out.println("     " + (i + 1) + "." + matches.get(i));
         }
     }
 
