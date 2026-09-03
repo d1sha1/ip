@@ -1,43 +1,28 @@
 import java.util.ArrayList;
-import java.util.Scanner;
 
 
 public class Rocky {
-    private static final String LINE =
-            "    ____________________________________________________________";
     private static final ArrayList<Task> tasks = new ArrayList<>();
     private static final String DATA_DIR = "data";
     private static final String DATA_FILE = "duke.txt";
     private static final Storage storage = new Storage(DATA_DIR, DATA_FILE);
+    private static final Ui ui = new Ui();
 
     public static void main(String[] args) {
         // Load any previously saved tasks before greeting the user.
         tasks.addAll(storage.load());
 
-        String banner =
-                " ____   ___   ____ _  ______   __\n"
-                        + "|  _ \\ / _ \\ / ___| |/ /\\ \\ / /\n"
-                        + "| |_) | | | | |   | ' /  \\ V / \n"
-                        + "|  _ <| |_| | |___| . \\   | |  \n"
-                        + "|_| \\_\\\\___/ \\____|_|\\_\\  |_|  \n";
-
-        System.out.println(LINE);
-        System.out.println(banner);
-        System.out.println("     Hello! I'm Rocky.");
-        System.out.println("     What can I do for you?");
-        System.out.println(LINE);
-
-        Scanner scanner = new Scanner(System.in);
+        ui.showWelcome();
 
         while (true) {
-            String input = scanner.nextLine().trim();
+            String input = ui.readCommand();
             String commandWord = input.split(" ", 2)[0];
-            System.out.println(LINE);
+            ui.showLine();
 
             try {
                 if (input.equals("bye")) {
-                    System.out.println("     Bye. Hope to see you again soon!");
-                    System.out.println(LINE);
+                    ui.showGoodbye();
+                    ui.showLine();
                     break;
                 } else if (input.equals("list")) {
                     printList();
@@ -57,24 +42,17 @@ public class Rocky {
                     }
                 }
             } catch (RockyException e) {
-                System.out.println("     " + e.getMessage());
+                ui.showError(e.getMessage());
             }
 
-            System.out.println(LINE);
+            ui.showLine();
         }
 
-        scanner.close();
+        ui.close();
     }
 
     private static void printList() {
-        if (tasks.isEmpty()) {
-            System.out.println("     Your list is empty. Add something!");
-            return;
-        }
-        System.out.println("     Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            System.out.println("     " + (i + 1) + "." + tasks.get(i));
-        }
+        ui.showTaskList(tasks);
     }
 
     private static void addTask(TaskType type, String input) throws RockyException {
@@ -127,18 +105,14 @@ public class Rocky {
 
         tasks.add(task);
         storage.save(tasks);
-        System.out.println("     Got it. I've added this task:");
-        System.out.println("       " + task);
-        System.out.println("     Now you have " + describeCount() + " in the list.");
+        ui.showTaskAdded(task, tasks.size());
     }
 
     private static void deleteTask(String input) throws RockyException {
         int index = parseIndex(input);
         Task removed = tasks.remove(index);
         storage.save(tasks);
-        System.out.println("     Noted. I've removed this task:");
-        System.out.println("       " + removed);
-        System.out.println("     Now you have " + describeCount() + " in the list.");
+        ui.showTaskRemoved(removed, tasks.size());
     }
 
     private static void setDone(String input, boolean done) throws RockyException {
@@ -147,13 +121,16 @@ public class Rocky {
 
         if (done) {
             task.mark();
-            System.out.println("     Nice! I've marked this task as done:");
         } else {
             task.unmark();
-            System.out.println("     OK, I've marked this task as not done yet:");
         }
         storage.save(tasks);
-        System.out.println("       " + task);
+
+        if (done) {
+            ui.showTaskMarked(task);
+        } else {
+            ui.showTaskUnmarked(task);
+        }
     }
 
     /** Extracts and validates a 1-based task number, returning a 0-based index. */
@@ -182,11 +159,6 @@ public class Rocky {
         }
 
         return index;
-    }
-
-    private static String describeCount() {
-        int n = tasks.size();
-        return n + (n == 1 ? " task" : " tasks");
     }
 
 }
