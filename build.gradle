@@ -51,7 +51,7 @@ test {
 }
 
 application {
-    mainClass = 'Rocky'
+    mainClass = 'Launcher'
 }
 
 jar {
