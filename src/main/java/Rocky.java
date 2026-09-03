@@ -7,106 +7,155 @@ import java.util.Scanner;
 
 
 /**
- * Entry point and command loop for Rocky, a simple text-based chatbot for
- * tracking todos, deadlines, and events. Reads user commands from standard
- * input, keeps an in-memory list of tasks, and persists that list to a save
- * file under {@code data/} after every change.
+ * Core of Rocky, a simple chatbot for tracking todos, deadlines, and events.
+ * Commands are plain text (e.g. "todo read book"), and {@link #getResponse}
+ * turns one such command into the reply to show the user. Keeping the reply
+ * as a returned string rather than printing it lets the text UI in
+ * {@link #main} and the JavaFX GUI share exactly the same logic. The task
+ * list is persisted to a save file under {@code data/} after every change.
  */
 public class Rocky {
     private static final String LINE =
             "    ____________________________________________________________";
+    private static final String BANNER =
+            " ____   ___   ____ _  ______   __\n"
+                    + "|  _ \\ / _ \\ / ___| |/ /\\ \\ / /\n"
+                    + "| |_) | | | | |   | ' /  \\ V / \n"
+                    + "|  _ <| |_| | |___| . \\   | |  \n"
+                    + "|_| \\_\\\\___/ \\____|_|\\_\\  |_|  \n";
     private static final ArrayList<Task> tasks = new ArrayList<>();
     private static final String DATA_DIR = "data";
     private static final String DATA_FILE = "duke.txt";
+    private static boolean isLoaded = false;
 
     /** Not meant to be instantiated; every member here is static. */
     private Rocky() {
     }
 
     /**
-     * Loads any previously saved tasks, greets the user, and then repeatedly
-     * reads and executes one command per line until the user types "bye".
+     * Loads previously saved tasks, unless they have been loaded already.
+     * Safe to call more than once, so every UI can call it on startup.
+     */
+    public static void initialize() {
+        if (!isLoaded) {
+            load();
+            isLoaded = true;
+        }
+    }
+
+    /** Returns Rocky's opening message. */
+    public static String getGreeting() {
+        return "Hello! I'm Rocky.\nWhat can I do for you?";
+    }
+
+    /**
+     * Returns true if the given input is the command to exit.
+     *
+     * @param input one full command line as typed by the user.
+     */
+    public static boolean isExitCommand(String input) {
+        return input.trim().equals("bye");
+    }
+
+    /**
+     * Runs one user command and returns Rocky's reply to it. Errors in the
+     * command are reported as the reply rather than thrown, so a UI can show
+     * them the same way it shows any other response.
+     *
+     * @param input one full command line, e.g. "deadline return book /by 2019-12-01".
+     * @return the reply to show the user, which may span several lines.
+     */
+    public static String getResponse(String input) {
+        String trimmed = input.trim();
+        String commandWord = trimmed.split(" ", 2)[0];
+
+        try {
+            if (trimmed.equals("bye")) {
+                return "Bye. Hope to see you again soon!";
+            } else if (trimmed.equals("list")) {
+                return listTasks();
+            } else if (commandWord.equals("mark")) {
+                return setDone(trimmed, true);
+            } else if (commandWord.equals("unmark")) {
+                return setDone(trimmed, false);
+            } else if (commandWord.equals("delete")) {
+                return deleteTask(trimmed);
+            } else if (commandWord.equals("find")) {
+                return findTasks(trimmed);
+            }
+
+            TaskType type = TaskType.fromKeyword(commandWord);
+            if (type == null) {
+                throw new RockyException(
+                        "Hmm, \"" + commandWord + "\" isn't a command I know.");
+            }
+            return addTask(type, trimmed);
+        } catch (RockyException e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * Greets the user, then reads and answers one command per line from
+     * standard input until the user types "bye".
      *
      * @param args unused.
      */
     public static void main(String[] args) {
         // Load any previously saved tasks before greeting the user.
-        load();
-
-        String banner =
-                " ____   ___   ____ _  ______   __\n"
-                        + "|  _ \\ / _ \\ / ___| |/ /\\ \\ / /\n"
-                        + "| |_) | | | | |   | ' /  \\ V / \n"
-                        + "|  _ <| |_| | |___| . \\   | |  \n"
-                        + "|_| \\_\\\\___/ \\____|_|\\_\\  |_|  \n";
+        initialize();
 
         System.out.println(LINE);
-        System.out.println(banner);
-        System.out.println("     Hello! I'm Rocky.");
-        System.out.println("     What can I do for you?");
+        System.out.println(BANNER);
+        printIndented(getGreeting());
         System.out.println(LINE);
 
         Scanner scanner = new Scanner(System.in);
 
-        while (true) {
-            String input = scanner.nextLine().trim();
-            String commandWord = input.split(" ", 2)[0];
+        while (scanner.hasNextLine()) {
+            String input = scanner.nextLine();
+            String response = getResponse(input);
+
+            System.out.println(LINE);
+            printIndented(response);
             System.out.println(LINE);
 
-            try {
-                if (input.equals("bye")) {
-                    System.out.println("     Bye. Hope to see you again soon!");
-                    System.out.println(LINE);
-                    break;
-                } else if (input.equals("list")) {
-                    printList();
-                } else if (commandWord.equals("mark")) {
-                    setDone(input, true);
-                } else if (commandWord.equals("unmark")) {
-                    setDone(input, false);
-                } else if (commandWord.equals("delete")) {
-                    deleteTask(input);
-                } else if (commandWord.equals("find")) {
-                    findTasks(input);
-                } else {
-                    TaskType type = TaskType.fromKeyword(commandWord);
-                    if (type != null) {
-                        addTask(type, input);
-                    } else {
-                        throw new RockyException(
-                                "Hmm, \"" + commandWord + "\" isn't a command I know.");
-                    }
-                }
-            } catch (RockyException e) {
-                System.out.println("     " + e.getMessage());
+            if (isExitCommand(input)) {
+                break;
             }
-
-            System.out.println(LINE);
         }
 
         scanner.close();
     }
 
-    /** Prints every task in the list, or a friendly message if it's empty. */
-    private static void printList() {
-        if (tasks.isEmpty()) {
-            System.out.println("     Your list is empty. Add something!");
-            return;
-        }
-        System.out.println("     Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            System.out.println("     " + (i + 1) + "." + tasks.get(i));
+    /** Prints a possibly multi-line reply, indented to match the text UI's layout. */
+    private static void printIndented(String text) {
+        for (String line : text.split("\n")) {
+            System.out.println("     " + line);
         }
     }
 
+    /** Returns every task in the list, or a friendly message if it's empty. */
+    private static String listTasks() {
+        if (tasks.isEmpty()) {
+            return "Your list is empty. Add something!";
+        }
+
+        StringBuilder builder = new StringBuilder("Here are the tasks in your list:");
+        for (int i = 0; i < tasks.size(); i++) {
+            builder.append("\n").append(i + 1).append(".").append(tasks.get(i));
+        }
+        return builder.toString();
+    }
+
     /**
-     * Finds and prints every task whose description contains the given
-     * keyword (case-insensitive), e.g. "find book".
+     * Returns every task whose description contains the given keyword
+     * (case-insensitive), e.g. "find book".
      *
      * @param input the full "find ..." command line.
      * @throws RockyException if no keyword is given.
      */
-    private static void findTasks(String input) throws RockyException {
+    private static String findTasks(String input) throws RockyException {
         String keyword = input.length() > "find".length()
                 ? input.substring("find".length()).trim()
                 : "";
@@ -124,26 +173,27 @@ public class Rocky {
         }
 
         if (matches.isEmpty()) {
-            System.out.println("     No matching tasks found.");
-            return;
+            return "No matching tasks found.";
         }
-        System.out.println("     Here are the matching tasks in your list:");
+
+        StringBuilder builder = new StringBuilder("Here are the matching tasks in your list:");
         for (int i = 0; i < matches.size(); i++) {
-            System.out.println("     " + (i + 1) + "." + matches.get(i));
+            builder.append("\n").append(i + 1).append(".").append(matches.get(i));
         }
+        return builder.toString();
     }
 
     /**
      * Parses and adds a new todo/deadline/event task from a full command
-     * line (e.g. "deadline return book /by 2019-12-01"), then saves and
-     * confirms the addition to the user.
+     * line (e.g. "deadline return book /by 2019-12-01"), then saves the list.
      *
      * @param type which kind of task the command word identified.
-     * @param input the full, untrimmed-of-command-word user input line.
+     * @param input the full user input line, including the command word.
+     * @return confirmation of the addition.
      * @throws RockyException if the description or required dates are
      *     missing, malformed, or in the wrong format.
      */
-    private static void addTask(TaskType type, String input) throws RockyException {
+    private static String addTask(TaskType type, String input) throws RockyException {
         String body = input.length() > type.getKeyword().length()
                 ? input.substring(type.getKeyword().length()).trim()
                 : "";
@@ -188,55 +238,56 @@ public class Rocky {
                 break;
             }
             default:
-                return;
+                throw new RockyException("I don't know how to add that kind of task.");
         }
 
         tasks.add(task);
         save();
-        System.out.println("     Got it. I've added this task:");
-        System.out.println("       " + task);
-        System.out.println("     Now you have " + describeCount() + " in the list.");
+        return "Got it. I've added this task:\n  " + task
+                + "\nNow you have " + describeCount() + " in the list.";
     }
 
     /**
-     * Removes the task named by a "delete N" command, saves, and confirms
-     * the removal to the user.
+     * Removes the task named by a "delete N" command and saves the list.
      *
      * @param input the full "delete ..." command line.
+     * @return confirmation of the removal.
      * @throws RockyException if no task number is given, it isn't a number,
      *     or it's out of range.
      */
-    private static void deleteTask(String input) throws RockyException {
+    private static String deleteTask(String input) throws RockyException {
         int index = parseIndex(input);
         Task removed = tasks.remove(index);
         save();
-        System.out.println("     Noted. I've removed this task:");
-        System.out.println("       " + removed);
-        System.out.println("     Now you have " + describeCount() + " in the list.");
+        return "Noted. I've removed this task:\n  " + removed
+                + "\nNow you have " + describeCount() + " in the list.";
     }
 
     /**
-     * Marks or unmarks the task named by a "mark N"/"unmark N" command,
-     * saves, and confirms the change to the user.
+     * Marks or unmarks the task named by a "mark N"/"unmark N" command and
+     * saves the list.
      *
      * @param input the full "mark ..."/"unmark ..." command line.
      * @param done true to mark the task done, false to mark it not done.
+     * @return confirmation of the change.
      * @throws RockyException if no task number is given, it isn't a number,
      *     or it's out of range.
      */
-    private static void setDone(String input, boolean done) throws RockyException {
+    private static String setDone(String input, boolean done) throws RockyException {
         int index = parseIndex(input);
         Task task = tasks.get(index);
 
+        String message;
         if (done) {
             task.mark();
-            System.out.println("     Nice! I've marked this task as done:");
+            message = "Nice! I've marked this task as done:";
         } else {
             task.unmark();
-            System.out.println("     OK, I've marked this task as not done yet:");
+            message = "OK, I've marked this task as not done yet:";
         }
+
         save();
-        System.out.println("       " + task);
+        return message + "\n  " + task;
     }
 
     /** Extracts and validates a 1-based task number, returning a 0-based index. */
