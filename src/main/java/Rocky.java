@@ -6,6 +6,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 
+/**
+ * Entry point and command loop for Rocky, a simple text-based chatbot for
+ * tracking todos, deadlines, and events. Reads user commands from standard
+ * input, keeps an in-memory list of tasks, and persists that list to a save
+ * file under {@code data/} after every change.
+ */
 public class Rocky {
     private static final String LINE =
             "    ____________________________________________________________";
@@ -13,6 +19,16 @@ public class Rocky {
     private static final String DATA_DIR = "data";
     private static final String DATA_FILE = "duke.txt";
 
+    /** Not meant to be instantiated; every member here is static. */
+    private Rocky() {
+    }
+
+    /**
+     * Loads any previously saved tasks, greets the user, and then repeatedly
+     * reads and executes one command per line until the user types "bye".
+     *
+     * @param args unused.
+     */
     public static void main(String[] args) {
         // Load any previously saved tasks before greeting the user.
         load();
@@ -69,6 +85,7 @@ public class Rocky {
         scanner.close();
     }
 
+    /** Prints every task in the list, or a friendly message if it's empty. */
     private static void printList() {
         if (tasks.isEmpty()) {
             System.out.println("     Your list is empty. Add something!");
@@ -80,6 +97,16 @@ public class Rocky {
         }
     }
 
+    /**
+     * Parses and adds a new todo/deadline/event task from a full command
+     * line (e.g. "deadline return book /by 2019-12-01"), then saves and
+     * confirms the addition to the user.
+     *
+     * @param type which kind of task the command word identified.
+     * @param input the full, untrimmed-of-command-word user input line.
+     * @throws RockyException if the description or required dates are
+     *     missing, malformed, or in the wrong format.
+     */
     private static void addTask(TaskType type, String input) throws RockyException {
         String body = input.length() > type.getKeyword().length()
                 ? input.substring(type.getKeyword().length()).trim()
@@ -135,6 +162,14 @@ public class Rocky {
         System.out.println("     Now you have " + describeCount() + " in the list.");
     }
 
+    /**
+     * Removes the task named by a "delete N" command, saves, and confirms
+     * the removal to the user.
+     *
+     * @param input the full "delete ..." command line.
+     * @throws RockyException if no task number is given, it isn't a number,
+     *     or it's out of range.
+     */
     private static void deleteTask(String input) throws RockyException {
         int index = parseIndex(input);
         Task removed = tasks.remove(index);
@@ -144,6 +179,15 @@ public class Rocky {
         System.out.println("     Now you have " + describeCount() + " in the list.");
     }
 
+    /**
+     * Marks or unmarks the task named by a "mark N"/"unmark N" command,
+     * saves, and confirms the change to the user.
+     *
+     * @param input the full "mark ..."/"unmark ..." command line.
+     * @param done true to mark the task done, false to mark it not done.
+     * @throws RockyException if no task number is given, it isn't a number,
+     *     or it's out of range.
+     */
     private static void setDone(String input, boolean done) throws RockyException {
         int index = parseIndex(input);
         Task task = tasks.get(index);
@@ -187,11 +231,18 @@ public class Rocky {
         return index;
     }
 
+    /** Returns "N task" or "N tasks" as appropriate for the current list size. */
     private static String describeCount() {
         int n = tasks.size();
         return n + (n == 1 ? " task" : " tasks");
     }
 
+    /**
+     * Loads previously saved tasks from {@code data/duke.txt} into
+     * {@link #tasks}. Does nothing if the file doesn't exist yet (e.g. first
+     * run). A line that can't be parsed is skipped with a warning, without
+     * stopping the rest of the file from loading.
+     */
     private static void load() {
         File file = new File(DATA_DIR, DATA_FILE);
         if (!file.exists()) {
@@ -214,6 +265,11 @@ public class Rocky {
         }
     }
 
+    /**
+     * Saves {@link #tasks} to {@code data/duke.txt}, overwriting whatever
+     * was there before. Creates the data folder/file first if they don't
+     * exist yet.
+     */
     private static void save() {
         try {
             File file = ensureDataFile(DATA_DIR, DATA_FILE);
@@ -227,6 +283,13 @@ public class Rocky {
         }
     }
 
+    /**
+     * Converts a task to its one-line save-file representation, e.g.
+     * {@code "D | 0 | return book | 2019-12-01"}.
+     *
+     * @param task the task to encode.
+     * @return the line to write to the save file for this task.
+     */
     private static String taskToLine(Task task) {
         String done = task.isDone() ? "1" : "0";
         String line = " | " + done + " | " + task.getDescription();
@@ -242,6 +305,14 @@ public class Rocky {
         }
     }
 
+    /**
+     * Parses one save-file line back into a Task.
+     *
+     * @param line a line previously produced by {@link #taskToLine}.
+     * @return the reconstructed task, with its done state restored.
+     * @throws RockyException if the line is malformed, e.g. missing fields
+     *     or an unparsable date.
+     */
     private static Task lineToTask(String line) throws RockyException {
         String[] parts = line.split("\\|");
         String type = parts[0].trim();
@@ -267,6 +338,14 @@ public class Rocky {
         return task;
     }
 
+    /**
+     * Ensures the save folder and file exist, creating them if necessary.
+     *
+     * @param folderName the folder the save file should live in, e.g. "data".
+     * @param fileName the save file's name, e.g. "duke.txt".
+     * @return the (now guaranteed to exist) save file.
+     * @throws IOException if the folder or file can't be created.
+     */
     private static File ensureDataFile(String folderName, String fileName) throws IOException {
         File folder = new File(folderName);
         if (!folder.exists()) {
