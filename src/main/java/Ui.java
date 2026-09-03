@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -49,7 +48,7 @@ public class Ui {
     }
 
     /** Prints the task list, or a friendly message if it's empty. */
-    public void showTaskList(ArrayList<Task> tasks) {
+    public void showTaskList(TaskList tasks) {
         if (tasks.isEmpty()) {
             System.out.println("     Your list is empty. Add something!");
             return;

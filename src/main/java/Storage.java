@@ -49,11 +49,11 @@ public class Storage {
     }
 
     /** Saves the given tasks to disk, overwriting whatever was there before. */
-    public void save(ArrayList<Task> tasks) {
+    public void save(TaskList tasks) {
         try {
             ensureFileExists();
             try (FileWriter writer = new FileWriter(file)) {
-                for (Task task : tasks) {
+                for (Task task : tasks.getTasks()) {
                     writer.write(taskToLine(task) + System.lineSeparator());
                 }
             }

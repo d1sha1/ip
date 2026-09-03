@@ -1,17 +1,11 @@
-import java.util.ArrayList;
-
-
 public class Rocky {
-    private static final ArrayList<Task> tasks = new ArrayList<>();
     private static final String DATA_DIR = "data";
     private static final String DATA_FILE = "duke.txt";
     private static final Storage storage = new Storage(DATA_DIR, DATA_FILE);
+    private static final TaskList tasks = new TaskList(storage.load());
     private static final Ui ui = new Ui();
 
     public static void main(String[] args) {
-        // Load any previously saved tasks before greeting the user.
-        tasks.addAll(storage.load());
-
         ui.showWelcome();
 
         while (true) {
@@ -110,7 +104,7 @@ public class Rocky {
 
     private static void deleteTask(String input) throws RockyException {
         int index = parseIndex(input);
-        Task removed = tasks.remove(index);
+        Task removed = tasks.delete(index);
         storage.save(tasks);
         ui.showTaskRemoved(removed, tasks.size());
     }
