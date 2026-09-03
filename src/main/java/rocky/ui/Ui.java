@@ -1,4 +1,9 @@
+package rocky.ui;
+
 import java.util.Scanner;
+
+import rocky.task.Task;
+import rocky.task.TaskList;
 
 /**
  * Deals with all interaction with the user: printing messages, reading

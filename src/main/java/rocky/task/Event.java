@@ -1,6 +1,10 @@
+package rocky.task;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+
+import rocky.RockyException;
 
 public class Event extends Task {
     /** How the start/end dates are shown to the user, e.g. "Oct 15 2019". */

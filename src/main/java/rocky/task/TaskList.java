@@ -1,10 +1,12 @@
+package rocky.task;
+
 import java.util.ArrayList;
 
 /**
  * Wraps the in-memory list of tasks and provides the operations the rest
  * of the app needs: adding, removing, and looking up tasks by index.
  * Callers are expected to have already validated that an index is in
- * range (see Rocky#parseIndex) before calling get()/delete().
+ * range (see rocky.parser.Parser#parseIndex) before calling get()/delete().
  */
 public class TaskList {
     private final ArrayList<Task> tasks;

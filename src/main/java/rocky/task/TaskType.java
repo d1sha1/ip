@@ -1,3 +1,5 @@
+package rocky.task;
+
 public enum TaskType {
     TODO("todo", "T"),
     DEADLINE("deadline", "D"),
