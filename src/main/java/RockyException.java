@@ -7,7 +7,7 @@ public class RockyException extends Exception {
 
     /**
      * Creates a RockyException carrying a message meant to be shown
-     * directly to the user (e.g. via {@code System.out}).
+     * directly to the user, by whichever UI (text or GUI) is in use.
      *
      * @param message the user-facing explanation of what went wrong.
      */
