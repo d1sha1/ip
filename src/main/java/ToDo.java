@@ -7,7 +7,7 @@ public class ToDo extends Task {
      * @param description what the task is, e.g. "read book".
      */
     public ToDo(String description) {
-        super(description, false);
+        super(description);
     }
 
     /** Returns the "[T]" type icon followed by the checkbox and description. */

@@ -17,7 +17,7 @@ public class Deadline extends Task {
      * @throws RockyException if {@code date} isn't in ISO format.
      */
     public Deadline(String description, String date) throws RockyException {
-        super(description, false);
+        super(description);
         try {
             this.date = LocalDate.parse(date);
         } catch (DateTimeParseException e) {
