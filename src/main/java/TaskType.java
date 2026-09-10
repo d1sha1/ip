@@ -14,6 +14,10 @@ public enum TaskType {
     private final String icon;
 
     TaskType(String keyword, String icon) {
+        // Rocky.getResponse() matches keywords against the first space-separated word of the
+        // input, so a keyword with a space in it could never be typed.
+        assert !keyword.isEmpty() && !keyword.contains(" ") : "a keyword should be a single word";
+
         this.keyword = keyword;
         this.icon = icon;
     }

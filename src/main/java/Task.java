@@ -15,6 +15,11 @@ public abstract class Task {
      * @param isDone whether the task starts out already marked done.
      */
     public Task(String description, Boolean isDone) {
+        // Callers always pass a real description and state. isDone is a Boolean object, so a null
+        // here wouldn't fail until isDone() unboxes it, far from the actual mistake.
+        assert description != null : "a task's description should never be null";
+        assert isDone != null : "a task's done state should never be null";
+
         this.description = description;
         this.isDone = isDone;
     }

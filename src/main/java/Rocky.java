@@ -66,6 +66,9 @@ public class Rocky {
      * @return the reply to show the user, which may span several lines.
      */
     public static String getResponse(String input) {
+        // Both UIs pass what the user typed; Scanner.nextLine() and TextField.getText() never give null.
+        assert input != null : "getResponse() should never receive a null command";
+
         String trimmed = input.trim();
         String commandWord = trimmed.split(" ", 2)[0];
 
@@ -156,6 +159,9 @@ public class Rocky {
      * @throws RockyException if no keyword is given.
      */
     private static String findTasks(String input) throws RockyException {
+        // getResponse() only routes here when the command word is exactly "find".
+        assert input.startsWith("find") : "findTasks() should only receive \"find ...\" commands";
+
         String keyword = input.length() > "find".length()
                 ? input.substring("find".length()).trim()
                 : "";
@@ -194,6 +200,10 @@ public class Rocky {
      *     missing, malformed, or in the wrong format.
      */
     private static String addTask(TaskType type, String input) throws RockyException {
+        // getResponse() only calls this after finding a TaskType for the input's first word.
+        assert type != null : "addTask() needs a known task type";
+        assert input.startsWith(type.getKeyword()) : "input should begin with the task type's keyword";
+
         String body = input.length() > type.getKeyword().length()
                 ? input.substring(type.getKeyword().length()).trim()
                 : "";
@@ -241,6 +251,9 @@ public class Rocky {
                 throw new RockyException("I don't know how to add that kind of task.");
         }
 
+        // Every case above rejects an empty description before creating the task.
+        assert !task.getDescription().isEmpty() : "a new task should always have a description";
+
         tasks.add(task);
         save();
         return "Got it. I've added this task:\n  " + task
@@ -268,23 +281,26 @@ public class Rocky {
      * saves the list.
      *
      * @param input the full "mark ..."/"unmark ..." command line.
-     * @param done true to mark the task done, false to mark it not done.
+     * @param isDone true to mark the task done, false to mark it not done.
      * @return confirmation of the change.
      * @throws RockyException if no task number is given, it isn't a number,
      *     or it's out of range.
      */
-    private static String setDone(String input, boolean done) throws RockyException {
+    private static String setDone(String input, boolean isDone) throws RockyException {
         int index = parseIndex(input);
         Task task = tasks.get(index);
 
         String message;
-        if (done) {
+        if (isDone) {
             task.mark();
             message = "Nice! I've marked this task as done:";
         } else {
             task.unmark();
             message = "OK, I've marked this task as not done yet:";
         }
+
+        // The reply and the save file both report this state, so it must match what was asked for.
+        assert task.isDone() == isDone : "task's done state should now match the command";
 
         save();
         return message + "\n  " + task;

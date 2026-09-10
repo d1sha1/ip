@@ -23,16 +23,16 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.4'
 
     implementation("org.openjfx:javafx-base:${javaFxVersion}:win")
-    implementation("org.openjfx:javafx-base:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-base:${javaFxVersion}:mac-aarch64")
     implementation("org.openjfx:javafx-base:${javaFxVersion}:linux")
     implementation("org.openjfx:javafx-controls:${javaFxVersion}:win")
-    implementation("org.openjfx:javafx-controls:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-controls:${javaFxVersion}:mac-aarch64")
     implementation("org.openjfx:javafx-controls:${javaFxVersion}:linux")
     implementation("org.openjfx:javafx-fxml:${javaFxVersion}:win")
-    implementation("org.openjfx:javafx-fxml:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-fxml:${javaFxVersion}:mac-aarch64")
     implementation("org.openjfx:javafx-fxml:${javaFxVersion}:linux")
     implementation("org.openjfx:javafx-graphics:${javaFxVersion}:win")
-    implementation("org.openjfx:javafx-graphics:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-graphics:${javaFxVersion}:mac-aarch64")
     implementation("org.openjfx:javafx-graphics:${javaFxVersion}:linux")
 }
 
@@ -67,4 +67,6 @@ shadowJar {
 
 run {
     standardInput = System.in
+    // Java skips assert statements unless assertions are enabled (the -ea flag).
+    enableAssertions = true
 }
