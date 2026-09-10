@@ -218,39 +218,16 @@ public class Rocky {
         }
 
         Task task;
-
         switch (type) {
             case TODO:
                 task = new ToDo(body);
                 break;
-            case DEADLINE: {
-                String[] parts = body.split(" /by ", 2);
-                if (parts.length < 2 || parts[0].trim().isEmpty()
-                        || parts[1].trim().isEmpty()) {
-                    throw new RockyException(
-                            "A deadline needs a due date. Format: "
-                                    + "deadline <task> /by <when>");
-                }
-                task = new Deadline(parts[0].trim(), parts[1].trim());
+            case DEADLINE:
+                task = parseDeadline(body);
                 break;
-            }
-            case EVENT: {
-                String[] fromParts = body.split(" /from ", 2);
-                if (fromParts.length < 2 || fromParts[0].trim().isEmpty()) {
-                    throw new RockyException(
-                            "An event needs a start time. Format: "
-                                    + "event <task> /from <start> /to <end>");
-                }
-                String[] toParts = fromParts[1].split(" /to ", 2);
-                if (toParts.length < 2 || toParts[0].trim().isEmpty()
-                        || toParts[1].trim().isEmpty()) {
-                    throw new RockyException(
-                            "An event needs an end time. Format: "
-                                    + "event <task> /from <start> /to <end>");
-                }
-                task = new Event(fromParts[0].trim(), toParts[0].trim(), toParts[1].trim());
+            case EVENT:
+                task = parseEvent(body);
                 break;
-            }
             default:
                 throw new RockyException("I don't know how to add that kind of task.");
         }
@@ -262,6 +239,43 @@ public class Rocky {
         save();
         return "Got it. I've added this task:\n  " + task
                 + "\nNow you have " + describeCount() + " in the list.";
+    }
+
+    /**
+     * Parses the text after "deadline" into a Deadline, e.g. "return book /by 2019-12-01".
+     *
+     * @param body the command line with the "deadline" keyword removed.
+     * @throws RockyException if the description or due date is missing, or
+     *     the date isn't in ISO format.
+     */
+    private static Deadline parseDeadline(String body) throws RockyException {
+        String[] parts = body.split(" /by ", 2);
+        if (parts.length < 2 || parts[0].trim().isEmpty() || parts[1].trim().isEmpty()) {
+            throw new RockyException("A deadline needs a due date. Format: deadline <task> /by <when>");
+        }
+        return new Deadline(parts[0].trim(), parts[1].trim());
+    }
+
+    /**
+     * Parses the text after "event" into an Event, e.g. "meeting /from 2019-12-02 /to 2019-12-03".
+     *
+     * @param body the command line with the "event" keyword removed.
+     * @throws RockyException if the description, start, or end is missing,
+     *     or either date isn't in ISO format.
+     */
+    private static Event parseEvent(String body) throws RockyException {
+        String[] fromParts = body.split(" /from ", 2);
+        if (fromParts.length < 2 || fromParts[0].trim().isEmpty()) {
+            throw new RockyException(
+                    "An event needs a start time. Format: event <task> /from <start> /to <end>");
+        }
+
+        String[] toParts = fromParts[1].split(" /to ", 2);
+        if (toParts.length < 2 || toParts[0].trim().isEmpty() || toParts[1].trim().isEmpty()) {
+            throw new RockyException(
+                    "An event needs an end time. Format: event <task> /from <start> /to <end>");
+        }
+        return new Event(fromParts[0].trim(), toParts[0].trim(), toParts[1].trim());
     }
 
     /**
