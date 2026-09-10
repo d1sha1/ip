@@ -447,28 +447,44 @@ public class Rocky {
      *     or an unparsable date.
      */
     private static Task lineToTask(String line) throws RockyException {
-        String[] parts = line.split("\\|");
-        String type = parts[0].trim();
-        boolean isDone = parts[1].trim().equals("1");
-        String description = parts[2].trim();
+        String[] fields = line.split("\\|");
+        String type = getField(fields, 0);
+        boolean isDone = getField(fields, 1).equals("1");
+        String description = getField(fields, 2);
 
         Task task;
         switch (type) {
-            case "D":
-                task = new Deadline(description, parts[3].trim());
-                break;
-            case "E":
-                task = new Event(description, parts[3].trim(), parts[4].trim());
-                break;
-            default:
+            case "T":
                 task = new ToDo(description);
                 break;
+            case "D":
+                task = new Deadline(description, getField(fields, 3));
+                break;
+            case "E":
+                task = new Event(description, getField(fields, 3), getField(fields, 4));
+                break;
+            default:
+                throw new RockyException("A saved task has an unknown type: " + type);
         }
 
         if (isDone) {
             task.mark();
         }
         return task;
+    }
+
+    /**
+     * Returns one trimmed field of a split save-file line.
+     *
+     * @param fields the line's fields, split on "|".
+     * @param position which field to return, counting from 0.
+     * @throws RockyException if the line has no field at that position.
+     */
+    private static String getField(String[] fields, int position) throws RockyException {
+        if (position >= fields.length) {
+            throw new RockyException("A saved task is missing some of its details.");
+        }
+        return fields[position].trim();
     }
 
     /**
