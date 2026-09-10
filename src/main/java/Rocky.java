@@ -319,26 +319,25 @@ public class Rocky {
 
     /** Extracts and validates a 1-based task number, returning a 0-based index. */
     private static int parseIndex(String input) throws RockyException {
-        String[] parts = input.split(" ", 2);
-        String command = parts[0];
+        String command = input.split(" ", 2)[0];
+        String number = getTextAfterCommand(input, command);
 
-        if (parts.length < 2 || parts[1].trim().isEmpty()) {
-            throw new RockyException(
-                    "Which task? Give me a number, like: " + command + " 2");
+        if (number.isEmpty()) {
+            throw new RockyException("Which task? Give me a number, like: " + command + " 2");
         }
 
         int index;
         try {
-            index = Integer.parseInt(parts[1].trim()) - 1;
+            index = Integer.parseInt(number) - 1;
         } catch (NumberFormatException e) {
-            throw new RockyException(
-                    "\"" + parts[1].trim() + "\" isn't a number I can work with.");
+            throw new RockyException("\"" + number + "\" isn't a number I can work with.");
         }
 
+        if (tasks.isEmpty()) {
+            throw new RockyException("Your list is empty, so there's nothing to " + command + ".");
+        }
         if (index < 0 || index >= tasks.size()) {
-            throw new RockyException(tasks.isEmpty()
-                    ? "Your list is empty, so there's nothing to " + command + "."
-                    : "You only have " + tasks.size() + " task(s), so there's no #"
+            throw new RockyException("You only have " + tasks.size() + " task(s), so there's no #"
                     + (index + 1) + ".");
         }
 
