@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 
@@ -149,12 +150,7 @@ public class Rocky {
         if (tasks.isEmpty()) {
             return "Your list is empty. Add something!";
         }
-
-        StringBuilder builder = new StringBuilder("Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            builder.append("\n").append(i + 1).append(".").append(tasks.get(i));
-        }
-        return builder.toString();
+        return formatTaskList("Here are the tasks in your list:", tasks);
     }
 
     /**
@@ -182,10 +178,20 @@ public class Rocky {
         if (matches.isEmpty()) {
             return "No matching tasks found.";
         }
+        return formatTaskList("Here are the matching tasks in your list:", matches);
+    }
 
-        StringBuilder builder = new StringBuilder("Here are the matching tasks in your list:");
-        for (int i = 0; i < matches.size(); i++) {
-            builder.append("\n").append(i + 1).append(".").append(matches.get(i));
+    /**
+     * Returns the heading followed by the given tasks as a numbered list,
+     * one task per line, numbered from 1.
+     *
+     * @param heading the line shown above the list.
+     * @param tasksToShow the tasks to number, in display order.
+     */
+    private static String formatTaskList(String heading, List<Task> tasksToShow) {
+        StringBuilder builder = new StringBuilder(heading);
+        for (int i = 0; i < tasksToShow.size(); i++) {
+            builder.append("\n").append(i + 1).append(".").append(tasksToShow.get(i));
         }
         return builder.toString();
     }
