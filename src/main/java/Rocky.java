@@ -150,7 +150,7 @@ public class Rocky {
         if (tasks.isEmpty()) {
             return "Your list is empty. Add something!";
         }
-        return formatTaskList("Here are the tasks in your list:", tasks);
+        return formatNumberedList("Here are the tasks in your list:", tasks);
     }
 
     /**
@@ -178,20 +178,20 @@ public class Rocky {
         if (matches.isEmpty()) {
             return "No matching tasks found.";
         }
-        return formatTaskList("Here are the matching tasks in your list:", matches);
+        return formatNumberedList("Here are the matching tasks in your list:", matches);
     }
 
     /**
-     * Returns the heading followed by the given tasks as a numbered list,
-     * one task per line, numbered from 1.
+     * Returns the heading followed by the given items (e.g. tasks or
+     * expenses) as a numbered list, one item per line, numbered from 1.
      *
      * @param heading the line shown above the list.
-     * @param tasksToShow the tasks to number, in display order.
+     * @param items the items to number, in display order.
      */
-    private static String formatTaskList(String heading, List<Task> tasksToShow) {
+    private static String formatNumberedList(String heading, List<?> items) {
         StringBuilder builder = new StringBuilder(heading);
-        for (int i = 0; i < tasksToShow.size(); i++) {
-            builder.append("\n").append(i + 1).append(".").append(tasksToShow.get(i));
+        for (int i = 0; i < items.size(); i++) {
+            builder.append("\n").append(i + 1).append(".").append(items.get(i));
         }
         return builder.toString();
     }
@@ -238,7 +238,7 @@ public class Rocky {
         tasks.add(task);
         save();
         return "Got it. I've added this task:\n  " + task
-                + "\nNow you have " + describeCount() + " in the list.";
+                + "\nNow you have " + describeCount(tasks.size(), "task") + " in the list.";
     }
 
     /**
@@ -287,11 +287,11 @@ public class Rocky {
      *     or it's out of range.
      */
     private static String deleteTask(String input) throws RockyException {
-        int index = parseIndex(input);
+        int index = parseIndex(input, tasks.size(), "list", "task");
         Task removed = tasks.remove(index);
         save();
         return "Noted. I've removed this task:\n  " + removed
-                + "\nNow you have " + describeCount() + " in the list.";
+                + "\nNow you have " + describeCount(tasks.size(), "task") + " in the list.";
     }
 
     /**
@@ -305,7 +305,7 @@ public class Rocky {
      *     or it's out of range.
      */
     private static String setDone(String input, boolean isDone) throws RockyException {
-        int index = parseIndex(input);
+        int index = parseIndex(input, tasks.size(), "list", "task");
         Task task = tasks.get(index);
 
         String message;
@@ -337,13 +337,24 @@ public class Rocky {
         return input.substring(commandWord.length()).trim();
     }
 
-    /** Extracts and validates a 1-based task number, returning a 0-based index. */
-    private static int parseIndex(String input) throws RockyException {
+    /**
+     * Extracts and validates the 1-based item number in a command such as
+     * "mark 2", returning it as a 0-based index.
+     *
+     * @param input the full command line.
+     * @param listSize how many items the numbered list currently has.
+     * @param listName what to call the list in messages, e.g. "list".
+     * @param itemName what to call one item in messages, e.g. "task".
+     * @throws RockyException if no number is given, it isn't a number, or
+     *     it's out of range.
+     */
+    private static int parseIndex(String input, int listSize, String listName, String itemName)
+            throws RockyException {
         String command = input.split(" ", 2)[0];
         String number = getTextAfterCommand(input, command);
 
         if (number.isEmpty()) {
-            throw new RockyException("Which task? Give me a number, like: " + command + " 2");
+            throw new RockyException("Which " + itemName + "? Give me a number, like: " + command + " 2");
         }
 
         int index;
@@ -353,21 +364,27 @@ public class Rocky {
             throw new RockyException("\"" + number + "\" isn't a number I can work with.");
         }
 
-        if (tasks.isEmpty()) {
-            throw new RockyException("Your list is empty, so there's nothing to " + command + ".");
+        if (listSize == 0) {
+            throw new RockyException("Your " + listName + " is empty, so there's nothing to "
+                    + command + ".");
         }
-        if (index < 0 || index >= tasks.size()) {
-            throw new RockyException("You only have " + tasks.size() + " task(s), so there's no #"
+        if (index < 0 || index >= listSize) {
+            throw new RockyException("You only have " + listSize + " " + itemName + "(s), so there's no #"
                     + (index + 1) + ".");
         }
 
         return index;
     }
 
-    /** Returns "N task" or "N tasks" as appropriate for the current list size. */
-    private static String describeCount() {
-        int n = tasks.size();
-        return n + (n == 1 ? " task" : " tasks");
+    /**
+     * Returns the count followed by the item name, made plural when needed,
+     * e.g. "1 task" or "3 expenses".
+     *
+     * @param count how many items there are.
+     * @param itemName what to call one item, e.g. "task".
+     */
+    private static String describeCount(int count, String itemName) {
+        return count + " " + itemName + (count == 1 ? "" : "s");
     }
 
     /**
