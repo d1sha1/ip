@@ -26,6 +26,12 @@ public class Rocky {
     private static final ArrayList<Task> tasks = new ArrayList<>();
     private static final String DATA_DIR = "data";
     private static final String DATA_FILE = "duke.txt";
+    private static final String COMMAND_BYE = "bye";
+    private static final String COMMAND_LIST = "list";
+    private static final String COMMAND_MARK = "mark";
+    private static final String COMMAND_UNMARK = "unmark";
+    private static final String COMMAND_DELETE = "delete";
+    private static final String COMMAND_FIND = "find";
     private static boolean isLoaded = false;
 
     /** Not meant to be instantiated; every member here is static. */
@@ -54,7 +60,7 @@ public class Rocky {
      * @param input one full command line as typed by the user.
      */
     public static boolean isExitCommand(String input) {
-        return input.trim().equals("bye");
+        return input.trim().equals(COMMAND_BYE);
     }
 
     /**
@@ -73,17 +79,17 @@ public class Rocky {
         String commandWord = trimmed.split(" ", 2)[0];
 
         try {
-            if (trimmed.equals("bye")) {
+            if (isExitCommand(trimmed)) {
                 return "Bye. Hope to see you again soon!";
-            } else if (trimmed.equals("list")) {
+            } else if (trimmed.equals(COMMAND_LIST)) {
                 return listTasks();
-            } else if (commandWord.equals("mark")) {
+            } else if (commandWord.equals(COMMAND_MARK)) {
                 return setDone(trimmed, true);
-            } else if (commandWord.equals("unmark")) {
+            } else if (commandWord.equals(COMMAND_UNMARK)) {
                 return setDone(trimmed, false);
-            } else if (commandWord.equals("delete")) {
+            } else if (commandWord.equals(COMMAND_DELETE)) {
                 return deleteTask(trimmed);
-            } else if (commandWord.equals("find")) {
+            } else if (commandWord.equals(COMMAND_FIND)) {
                 return findTasks(trimmed);
             }
 
@@ -160,10 +166,10 @@ public class Rocky {
      */
     private static String findTasks(String input) throws RockyException {
         // getResponse() only routes here when the command word is exactly "find".
-        assert input.startsWith("find") : "findTasks() should only receive \"find ...\" commands";
+        assert input.startsWith(COMMAND_FIND) : "findTasks() should only receive \"find ...\" commands";
 
-        String keyword = input.length() > "find".length()
-                ? input.substring("find".length()).trim()
+        String keyword = input.length() > COMMAND_FIND.length()
+                ? input.substring(COMMAND_FIND.length()).trim()
                 : "";
 
         if (keyword.isEmpty()) {
