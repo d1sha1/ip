@@ -22,7 +22,7 @@ public class Event extends Task {
      * @throws RockyException if either date isn't in ISO format.
      */
     public Event(String description, String startDate, String endDate) throws RockyException {
-        super(description, false);
+        super(description);
         try {
             this.startDate = LocalDate.parse(startDate);
             this.endDate = LocalDate.parse(endDate);

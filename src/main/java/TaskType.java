@@ -54,4 +54,19 @@ public enum TaskType {
         }
         return null;
     }
+
+    /**
+     * Looks up the TaskType whose save-file icon matches the given letter.
+     *
+     * @param icon the type letter read from the save file, e.g. "D".
+     * @return the matching TaskType, or null if no TaskType uses that icon.
+     */
+    public static TaskType fromIcon(String icon) {
+        for (TaskType type : values()) {
+            if (type.icon.equals(icon)) {
+                return type;
+            }
+        }
+        return null;
+    }
 }

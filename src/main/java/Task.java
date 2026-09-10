@@ -6,22 +6,19 @@
  */
 public abstract class Task {
     private String description;
-    private Boolean isDone;
+    private boolean isDone = false;
 
     /**
-     * Creates a task with the given description and completion state.
+     * Creates a task with the given description, initially not marked done.
      *
      * @param description what the task is, e.g. "read book".
-     * @param isDone whether the task starts out already marked done.
      */
-    public Task(String description, Boolean isDone) {
-        // Callers always pass a real description and state. isDone is a Boolean object, so a null
-        // here wouldn't fail until isDone() unboxes it, far from the actual mistake.
+    public Task(String description) {
+        // Every subclass passes a real description. A null would only fail later, far from
+        // the actual mistake, when the task is displayed or saved.
         assert description != null : "a task's description should never be null";
-        assert isDone != null : "a task's done state should never be null";
 
         this.description = description;
-        this.isDone = isDone;
     }
 
     /** Marks this task as done. */
@@ -55,8 +52,8 @@ public abstract class Task {
     /**
      * Returns true if this task has been marked done.
      *
-     * @return true if {@link #mark()} was called more recently than {@link #unmark()}
-     *     (or the task was constructed already done); false otherwise.
+     * @return true if {@link #mark()} was called more recently than {@link #unmark()};
+     *     false otherwise.
      */
     public boolean isDone() {
         return this.isDone;
