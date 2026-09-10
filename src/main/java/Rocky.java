@@ -429,12 +429,13 @@ public class Rocky {
 
         if (task instanceof Deadline) {
             Deadline deadline = (Deadline) task;
-            return "D" + line + " | " + deadline.getDate();
+            return TaskType.DEADLINE.getIcon() + line + " | " + deadline.getDate();
         } else if (task instanceof Event) {
             Event event = (Event) task;
-            return "E" + line + " | " + event.getStartDate() + " | " + event.getEndDate();
+            return TaskType.EVENT.getIcon() + line + " | " + event.getStartDate()
+                    + " | " + event.getEndDate();
         } else {
-            return "T" + line;
+            return TaskType.TODO.getIcon() + line;
         }
     }
 
@@ -448,23 +449,27 @@ public class Rocky {
      */
     private static Task lineToTask(String line) throws RockyException {
         String[] fields = line.split("\\|");
-        String type = getField(fields, 0);
+        TaskType type = TaskType.fromIcon(getField(fields, 0));
+        if (type == null) {
+            throw new RockyException("A saved task has an unknown type.");
+        }
+
         boolean isDone = getField(fields, 1).equals("1");
         String description = getField(fields, 2);
 
         Task task;
         switch (type) {
-            case "T":
+            case TODO:
                 task = new ToDo(description);
                 break;
-            case "D":
+            case DEADLINE:
                 task = new Deadline(description, getField(fields, 3));
                 break;
-            case "E":
+            case EVENT:
                 task = new Event(description, getField(fields, 3), getField(fields, 4));
                 break;
             default:
-                throw new RockyException("A saved task has an unknown type: " + type);
+                throw new RockyException("I don't know how to load that kind of task.");
         }
 
         if (isDone) {
