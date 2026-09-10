@@ -13,6 +13,6 @@ public class ToDo extends Task {
     /** Returns the "[T]" type icon followed by the checkbox and description. */
     @Override
     public String toString() {
-        return "[T] " + super.toString();
+        return "[T]" + super.toString();
     }
 }
