@@ -2,18 +2,21 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 
 /**
- * Core of Rocky, a simple chatbot for tracking todos, deadlines, and events.
- * Commands are plain text (e.g. "todo read book"), and {@link #getResponse}
- * turns one such command into the reply to show the user. Keeping the reply
- * as a returned string rather than printing it lets the text UI in
- * {@link #main} and the JavaFX GUI share exactly the same logic. The task
- * list is persisted to a save file under {@code data/} after every change.
+ * Core of Rocky, a simple chatbot for tracking todos, deadlines, and events,
+ * and for recording expenses. Commands are plain text (e.g. "todo read book"),
+ * and {@link #getResponse} turns one such command into the reply to show the
+ * user. Keeping the reply as a returned string rather than printing it lets
+ * the text UI in {@link #main} and the JavaFX GUI share exactly the same
+ * logic. Tasks and expenses are each saved to their own file under
+ * {@code data/} after every change.
  */
 public class Rocky {
     private static final String LINE =
@@ -33,6 +36,13 @@ public class Rocky {
     private static final String COMMAND_UNMARK = "unmark";
     private static final String COMMAND_DELETE = "delete";
     private static final String COMMAND_FIND = "find";
+    private static final String COMMAND_EXPENSE = "expense";
+    private static final String COMMAND_EXPENSES = "expenses";
+    private static final String COMMAND_DELETE_EXPENSE = "delete-expense";
+    private static final String EXPENSE_FILE = "expenses.txt";
+    private static final String EXPENSE_FORMAT =
+            "expense <description> /amount <amount> /category <category> [/on <yyyy-mm-dd>]";
+    private static final ExpenseList expenses = new ExpenseList(new File(DATA_DIR, EXPENSE_FILE));
     private static boolean isLoaded = false;
 
     /** Not meant to be instantiated; every member here is static. */
@@ -40,12 +50,14 @@ public class Rocky {
     }
 
     /**
-     * Loads previously saved tasks, unless they have been loaded already.
-     * Safe to call more than once, so every UI can call it on startup.
+     * Loads previously saved tasks and expenses, unless they have been
+     * loaded already. Safe to call more than once, so every UI can call it
+     * on startup.
      */
     public static void initialize() {
         if (!isLoaded) {
             load();
+            expenses.load();
             isLoaded = true;
         }
     }
@@ -76,33 +88,48 @@ public class Rocky {
         // Both UIs pass what the user typed; Scanner.nextLine() and TextField.getText() never give null.
         assert input != null : "getResponse() should never receive a null command";
 
-        String trimmed = input.trim();
-        String commandWord = trimmed.split(" ", 2)[0];
-
         try {
-            if (isExitCommand(trimmed)) {
-                return "Bye. Hope to see you again soon!";
-            } else if (trimmed.equals(COMMAND_LIST)) {
-                return listTasks();
-            } else if (commandWord.equals(COMMAND_MARK)) {
-                return setDone(trimmed, true);
-            } else if (commandWord.equals(COMMAND_UNMARK)) {
-                return setDone(trimmed, false);
-            } else if (commandWord.equals(COMMAND_DELETE)) {
-                return deleteTask(trimmed);
-            } else if (commandWord.equals(COMMAND_FIND)) {
-                return findTasks(trimmed);
-            }
-
-            TaskType type = TaskType.fromKeyword(commandWord);
-            if (type == null) {
-                throw new RockyException(
-                        "Hmm, \"" + commandWord + "\" isn't a command I know.");
-            }
-            return addTask(type, trimmed);
+            return runCommand(input.trim());
         } catch (RockyException e) {
             return e.getMessage();
         }
+    }
+
+    /**
+     * Runs one command line and returns Rocky's reply to it.
+     *
+     * @param input the command line, with surrounding whitespace removed.
+     * @return the reply to show the user.
+     * @throws RockyException if the command is unknown or its details are invalid.
+     */
+    private static String runCommand(String input) throws RockyException {
+        String commandWord = input.split(" ", 2)[0];
+
+        if (isExitCommand(input)) {
+            return "Bye. Hope to see you again soon!";
+        } else if (input.equals(COMMAND_LIST)) {
+            return listTasks();
+        } else if (commandWord.equals(COMMAND_MARK)) {
+            return setDone(input, true);
+        } else if (commandWord.equals(COMMAND_UNMARK)) {
+            return setDone(input, false);
+        } else if (commandWord.equals(COMMAND_DELETE)) {
+            return deleteTask(input);
+        } else if (commandWord.equals(COMMAND_FIND)) {
+            return findTasks(input);
+        } else if (input.equals(COMMAND_EXPENSES)) {
+            return listExpenses();
+        } else if (commandWord.equals(COMMAND_EXPENSE)) {
+            return addExpense(input);
+        } else if (commandWord.equals(COMMAND_DELETE_EXPENSE)) {
+            return deleteExpense(input);
+        }
+
+        TaskType type = TaskType.fromKeyword(commandWord);
+        if (type == null) {
+            throw new RockyException("Hmm, \"" + commandWord + "\" isn't a command I know.");
+        }
+        return addTask(type, input);
     }
 
     /**
@@ -322,6 +349,77 @@ public class Rocky {
 
         save();
         return message + "\n  " + task;
+    }
+
+    /** Returns every recorded expense, or a friendly message if there are none. */
+    private static String listExpenses() {
+        if (expenses.isEmpty()) {
+            return "You haven't recorded any expenses yet.";
+        }
+        return formatNumberedList("Here are your expenses:", expenses.getExpenses());
+    }
+
+    /**
+     * Records the expense described by an "expense ..." command, e.g.
+     * "expense lunch /amount 12.50 /category food", and saves it.
+     *
+     * @param input the full "expense ..." command line.
+     * @return confirmation of the new expense.
+     * @throws RockyException if any detail of the expense is missing or invalid.
+     */
+    private static String addExpense(String input) throws RockyException {
+        Expense expense = parseExpense(getTextAfterCommand(input, COMMAND_EXPENSE));
+        expenses.add(expense);
+        return "Got it. I've recorded this expense:\n  " + expense
+                + "\nNow you have " + describeCount(expenses.size(), "expense") + ".";
+    }
+
+    /**
+     * Parses the text after "expense" into an Expense, e.g.
+     * "lunch /amount 12.50 /category food /on 2026-09-11". The date is
+     * optional and defaults to today.
+     *
+     * @param body the command line with the "expense" keyword removed.
+     * @throws RockyException if the description, amount, or category is
+     *     missing, or any detail is invalid.
+     */
+    private static Expense parseExpense(String body) throws RockyException {
+        String[] amountParts = body.split(" /amount ", 2);
+        if (amountParts.length < 2 || amountParts[0].trim().isEmpty()) {
+            throw new RockyException(
+                    "An expense needs a description and an amount. Format: " + EXPENSE_FORMAT);
+        }
+
+        String description = amountParts[0].trim();
+        if (description.contains("|")) {
+            throw new RockyException("Sorry, an expense's description can't contain \"|\".");
+        }
+
+        String[] categoryParts = amountParts[1].split(" /category ", 2);
+        if (categoryParts.length < 2) {
+            throw new RockyException("An expense needs a category. Format: " + EXPENSE_FORMAT);
+        }
+
+        String[] dateParts = categoryParts[1].split(" /on ", 2);
+        BigDecimal amount = Expense.parseAmount(categoryParts[0]);
+        String category = Expense.parseCategory(dateParts[0]);
+        LocalDate date = (dateParts.length < 2) ? LocalDate.now() : Expense.parseDate(dateParts[1]);
+        return new Expense(description, amount, category, date);
+    }
+
+    /**
+     * Removes the expense named by a "delete-expense N" command and saves the list.
+     *
+     * @param input the full "delete-expense ..." command line.
+     * @return confirmation of the removal.
+     * @throws RockyException if no expense number is given, it isn't a number,
+     *     or it's out of range.
+     */
+    private static String deleteExpense(String input) throws RockyException {
+        int index = parseIndex(input, expenses.size(), "expense list", "expense");
+        Expense removed = expenses.remove(index);
+        return "Noted. I've removed this expense:\n  " + removed
+                + "\nNow you have " + describeCount(expenses.size(), "expense") + ".";
     }
 
     /**
