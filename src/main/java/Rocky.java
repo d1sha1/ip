@@ -165,12 +165,7 @@ public class Rocky {
      * @throws RockyException if no keyword is given.
      */
     private static String findTasks(String input) throws RockyException {
-        // getResponse() only routes here when the command word is exactly "find".
-        assert input.startsWith(COMMAND_FIND) : "findTasks() should only receive \"find ...\" commands";
-
-        String keyword = input.length() > COMMAND_FIND.length()
-                ? input.substring(COMMAND_FIND.length()).trim()
-                : "";
+        String keyword = getTextAfterCommand(input, COMMAND_FIND);
 
         if (keyword.isEmpty()) {
             throw new RockyException(
@@ -208,11 +203,8 @@ public class Rocky {
     private static String addTask(TaskType type, String input) throws RockyException {
         // getResponse() only calls this after finding a TaskType for the input's first word.
         assert type != null : "addTask() needs a known task type";
-        assert input.startsWith(type.getKeyword()) : "input should begin with the task type's keyword";
 
-        String body = input.length() > type.getKeyword().length()
-                ? input.substring(type.getKeyword().length()).trim()
-                : "";
+        String body = getTextAfterCommand(input, type.getKeyword());
 
         if (body.isEmpty()) {
             throw new RockyException(
@@ -310,6 +302,19 @@ public class Rocky {
 
         save();
         return message + "\n  " + task;
+    }
+
+    /**
+     * Returns whatever follows the command word in a command line, trimmed,
+     * e.g. "read book" for "todo read book", or "" if nothing follows it.
+     *
+     * @param input the full command line.
+     * @param commandWord the command word the line begins with, e.g. "todo".
+     */
+    private static String getTextAfterCommand(String input, String commandWord) {
+        // getResponse() only routes a line to a handler after matching its first word.
+        assert input.startsWith(commandWord) : "input should begin with its command word";
+        return input.substring(commandWord.length()).trim();
     }
 
     /** Extracts and validates a 1-based task number, returning a 0-based index. */
