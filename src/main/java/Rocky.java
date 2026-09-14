@@ -44,22 +44,19 @@ public class Rocky {
             "expense <description> /amount <amount> /category <category> [/on <yyyy-mm-dd>]";
     // What Rocky says when a command succeeds, in his Project Hail Mary voice.
     // Error messages keep their plain wording so the fix is easy to understand.
-    private static final String REPLY_TODO_ADDED = "New task. No time pressure. I remember it for you.";
-    private static final String REPLY_DEADLINE_ADDED =
-            "Task with deadline. I track time carefully. Human time units, difficult, but I manage.";
+    private static final String REPLY_TODO_ADDED = "New task. Do not worry. I remember it for you.";
+    private static final String REPLY_DEADLINE_ADDED = "Task with deadline. I track time carefully.";
     private static final String REPLY_EVENT_ADDED = "Task spans two times. Start and end. I mark both.";
-    private static final String REPLY_LIST = "Here is everything. All tasks. I show you full list now.";
+    private static final String REPLY_LIST = "Here is everything. Rocky show full list now";
     private static final String REPLY_MARKED = "Task complete! Good good good. I record success.";
-    private static final String REPLY_UNMARKED =
-            "Task not complete. I undo the mark. No shame — try again.";
-    private static final String REPLY_DELETED = "Task removed. Gone. I erase from memory.";
+    private static final String REPLY_UNMARKED = "Task not complete. I undo the mark.";
+    private static final String REPLY_DELETED = "Task removed. Gone.";
     private static final String REPLY_FIND =
             "Searching... I compare each task to your word. Matches only.";
-    private static final String REPLY_EXPENSE_ADDED =
-            "Resource spent. I log amount and category. Important — resources are finite.";
+    private static final String REPLY_EXPENSE_ADDED = "Resource spent. I log amount and category.";
     private static final String REPLY_EXPENSES = "All spending, here. I show you where resources went.";
     private static final String REPLY_EXPENSE_DELETED = "Expense record removed. I forget this transaction.";
-    private static final String REPLY_BYE = "Goodbye, friend. I power down now. Talk later — promise.";
+    private static final String REPLY_BYE = "Goodbye, friend. I power down now. Talk later.";
     private static final ExpenseList expenses = new ExpenseList(new File(DATA_DIR, EXPENSE_FILE));
     private static boolean isLoaded = false;
 
