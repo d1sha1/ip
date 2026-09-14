@@ -12,12 +12,25 @@ import javafx.util.Duration;
 /**
  * The chat window: a scrolling transcript of dialog boxes above a text field
  * where the user types the same commands the text UI accepts, e.g.
- * "todo read book" or "mark 2".
+ * "todo read book" or "mark 2". It uses a Project Hail Mary theme: a black
+ * background, with Rocky's replies in amber bubbles and the user's messages
+ * (as Ryland Grace) in blue ones.
  */
 public class MainWindow extends VBox {
     private static final double WINDOW_WIDTH = 420;
     private static final double WINDOW_HEIGHT = 600;
     private static final Duration EXIT_DELAY = Duration.seconds(1.5);
+    private static final String BACKGROUND_STYLE = "-fx-background-color: #000000;";
+    // A ScrollPane paints its content area using -fx-background, so it needs both properties.
+    private static final String SCROLL_PANE_STYLE =
+            "-fx-background: #000000; -fx-background-color: #000000; -fx-background-insets: 0;";
+    private static final String INPUT_ROW_STYLE = "-fx-background-color: #111111;";
+    private static final String INPUT_FIELD_STYLE =
+            "-fx-background-color: #1E1E1E; -fx-text-fill: #FFFFFF; -fx-prompt-text-fill: #8A8A8A;"
+                    + " -fx-background-radius: 8;";
+    private static final String SEND_BUTTON_STYLE =
+            "-fx-background-color: #E0A040; -fx-text-fill: #1A1208; -fx-font-weight: bold;"
+                    + " -fx-background-radius: 8;";
 
     private final VBox dialogContainer = new VBox();
     private final ScrollPane scrollPane = new ScrollPane(dialogContainer);
@@ -26,9 +39,12 @@ public class MainWindow extends VBox {
 
     /** Builds the chat window, loads any saved tasks, and shows the greeting. */
     public MainWindow() {
+        setStyle(BACKGROUND_STYLE);
+        dialogContainer.setStyle(BACKGROUND_STYLE);
         dialogContainer.setPadding(new Insets(8));
         dialogContainer.setSpacing(4);
 
+        scrollPane.setStyle(SCROLL_PANE_STYLE);
         scrollPane.setFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
@@ -36,12 +52,15 @@ public class MainWindow extends VBox {
         // Keep the newest message in view as the conversation grows.
         dialogContainer.heightProperty().addListener(observable -> scrollPane.setVvalue(1.0));
 
+        userInput.setStyle(INPUT_FIELD_STYLE);
         userInput.setPromptText("Type a command, e.g. todo read book");
         userInput.setOnAction(event -> handleUserInput());
         HBox.setHgrow(userInput, Priority.ALWAYS);
+        sendButton.setStyle(SEND_BUTTON_STYLE);
         sendButton.setOnAction(event -> handleUserInput());
 
         HBox inputRow = new HBox(8, userInput, sendButton);
+        inputRow.setStyle(INPUT_ROW_STYLE);
         inputRow.setPadding(new Insets(8));
 
         setPrefSize(WINDOW_WIDTH, WINDOW_HEIGHT);
