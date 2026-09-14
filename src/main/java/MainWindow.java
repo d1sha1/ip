@@ -12,9 +12,11 @@ import javafx.util.Duration;
 /**
  * The chat window: a scrolling transcript of dialog boxes above a text field
  * where the user types the same commands the text UI accepts, e.g.
- * "todo read book" or "mark 2". It uses a Project Hail Mary theme: a black
- * background, with Rocky's replies in amber bubbles and the user's messages
- * (as Ryland Grace) in blue ones.
+ * "todo read book" or "mark 2". It uses a Project Hail Mary theme on a black
+ * background. The two sides are shown differently, because the user is giving
+ * commands to an app rather than chatting with another person: each command is
+ * echoed as a compact, terminal-style line, while Rocky's replies appear as
+ * wider amber cards beside his picture.
  */
 public class MainWindow extends VBox {
     private static final double WINDOW_WIDTH = 420;
