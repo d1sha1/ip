@@ -42,6 +42,24 @@ public class Rocky {
     private static final String EXPENSE_FILE = "expenses.txt";
     private static final String EXPENSE_FORMAT =
             "expense <description> /amount <amount> /category <category> [/on <yyyy-mm-dd>]";
+    // What Rocky says when a command succeeds, in his Project Hail Mary voice.
+    // Error messages keep their plain wording so the fix is easy to understand.
+    private static final String REPLY_TODO_ADDED = "New task. No time pressure. I remember it for you.";
+    private static final String REPLY_DEADLINE_ADDED =
+            "Task with deadline. I track time carefully. Human time units, difficult, but I manage.";
+    private static final String REPLY_EVENT_ADDED = "Task spans two times. Start and end. I mark both.";
+    private static final String REPLY_LIST = "Here is everything. All tasks. I show you full list now.";
+    private static final String REPLY_MARKED = "Task complete! Good good good. I record success.";
+    private static final String REPLY_UNMARKED =
+            "Task not complete. I undo the mark. No shame — try again.";
+    private static final String REPLY_DELETED = "Task removed. Gone. I erase from memory.";
+    private static final String REPLY_FIND =
+            "Searching... I compare each task to your word. Matches only.";
+    private static final String REPLY_EXPENSE_ADDED =
+            "Resource spent. I log amount and category. Important — resources are finite.";
+    private static final String REPLY_EXPENSES = "All spending, here. I show you where resources went.";
+    private static final String REPLY_EXPENSE_DELETED = "Expense record removed. I forget this transaction.";
+    private static final String REPLY_BYE = "Goodbye, friend. I power down now. Talk later — promise.";
     private static final ExpenseList expenses = new ExpenseList(new File(DATA_DIR, EXPENSE_FILE));
     private static boolean isLoaded = false;
 
@@ -106,7 +124,7 @@ public class Rocky {
         String commandWord = input.split(" ", 2)[0];
 
         if (isExitCommand(input)) {
-            return "Bye. Hope to see you again soon!";
+            return REPLY_BYE;
         } else if (input.equals(COMMAND_LIST)) {
             return listTasks();
         } else if (commandWord.equals(COMMAND_MARK)) {
@@ -177,7 +195,7 @@ public class Rocky {
         if (tasks.isEmpty()) {
             return "Your list is empty. Add something!";
         }
-        return formatNumberedList("Here are the tasks in your list:", tasks);
+        return formatNumberedList(REPLY_LIST, tasks);
     }
 
     /**
@@ -205,7 +223,7 @@ public class Rocky {
         if (matches.isEmpty()) {
             return "No matching tasks found.";
         }
-        return formatNumberedList("Here are the matching tasks in your list:", matches);
+        return formatNumberedList(REPLY_FIND, matches);
     }
 
     /**
@@ -264,8 +282,20 @@ public class Rocky {
 
         tasks.add(task);
         save();
-        return "Got it. I've added this task:\n  " + task
+        return getAddedReply(type) + "\n  " + task
                 + "\nNow you have " + describeCount(tasks.size(), "task") + " in the list.";
+    }
+
+    /**
+     * Returns what Rocky says after adding a task of the given type. Every
+     * TaskType must have a case here; the compiler reports any that don't.
+     */
+    private static String getAddedReply(TaskType type) {
+        return switch (type) {
+            case TODO -> REPLY_TODO_ADDED;
+            case DEADLINE -> REPLY_DEADLINE_ADDED;
+            case EVENT -> REPLY_EVENT_ADDED;
+        };
     }
 
     /**
@@ -317,7 +347,7 @@ public class Rocky {
         int index = parseIndex(input, tasks.size(), "list", "task");
         Task removed = tasks.remove(index);
         save();
-        return "Noted. I've removed this task:\n  " + removed
+        return REPLY_DELETED + "\n  " + removed
                 + "\nNow you have " + describeCount(tasks.size(), "task") + " in the list.";
     }
 
@@ -338,10 +368,10 @@ public class Rocky {
         String message;
         if (isDone) {
             task.mark();
-            message = "Nice! I've marked this task as done:";
+            message = REPLY_MARKED;
         } else {
             task.unmark();
-            message = "OK, I've marked this task as not done yet:";
+            message = REPLY_UNMARKED;
         }
 
         // The reply and the save file both report this state, so it must match what was asked for.
@@ -356,7 +386,7 @@ public class Rocky {
         if (expenses.isEmpty()) {
             return "You haven't recorded any expenses yet.";
         }
-        return formatNumberedList("Here are your expenses:", expenses.getExpenses());
+        return formatNumberedList(REPLY_EXPENSES, expenses.getExpenses());
     }
 
     /**
@@ -370,7 +400,7 @@ public class Rocky {
     private static String addExpense(String input) throws RockyException {
         Expense expense = parseExpense(getTextAfterCommand(input, COMMAND_EXPENSE));
         expenses.add(expense);
-        return "Got it. I've recorded this expense:\n  " + expense
+        return REPLY_EXPENSE_ADDED + "\n  " + expense
                 + "\nNow you have " + describeCount(expenses.size(), "expense") + ".";
     }
 
@@ -418,7 +448,7 @@ public class Rocky {
     private static String deleteExpense(String input) throws RockyException {
         int index = parseIndex(input, expenses.size(), "expense list", "expense");
         Expense removed = expenses.remove(index);
-        return "Noted. I've removed this expense:\n  " + removed
+        return REPLY_EXPENSE_DELETED + "\n  " + removed
                 + "\nNow you have " + describeCount(expenses.size(), "expense") + ".";
     }
 
