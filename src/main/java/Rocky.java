@@ -65,6 +65,15 @@ public class Rocky {
     }
 
     /**
+     * Rocky's reply to one command.
+     *
+     * @param text the reply to show the user, which may span several lines.
+     * @param isError whether the reply explains what was wrong with the command.
+     */
+    public record Reply(String text, boolean isError) {
+    }
+
+    /**
      * Loads previously saved tasks and expenses, unless they have been
      * loaded already. Safe to call more than once, so every UI can call it
      * on startup.
@@ -100,13 +109,25 @@ public class Rocky {
      * @return the reply to show the user, which may span several lines.
      */
     public static String getResponse(String input) {
+        return getReply(input).text();
+    }
+
+    /**
+     * Runs one user command and returns Rocky's reply to it, along with
+     * whether the reply reports a problem with the command. The GUI uses
+     * this to show error replies differently from successful ones.
+     *
+     * @param input one full command line, e.g. "mark 2".
+     * @return the reply text, and whether it is an error message.
+     */
+    public static Reply getReply(String input) {
         // Both UIs pass what the user typed; Scanner.nextLine() and TextField.getText() never give null.
-        assert input != null : "getResponse() should never receive a null command";
+        assert input != null : "getReply() should never receive a null command";
 
         try {
-            return runCommand(input.trim());
+            return new Reply(runCommand(input.trim()), false);
         } catch (RockyException e) {
-            return e.getMessage();
+            return new Reply(e.getMessage(), true);
         }
     }
 

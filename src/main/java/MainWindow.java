@@ -16,7 +16,7 @@ import javafx.util.Duration;
  * background. The two sides are shown differently, because the user is giving
  * commands to an app rather than chatting with another person: each command is
  * echoed as a compact, terminal-style line, while Rocky's replies appear as
- * wider amber cards beside his picture.
+ * wider amber cards beside his picture, or as dark red alert cards when they report an error.
  */
 public class MainWindow extends VBox {
     private static final double WINDOW_WIDTH = 420;
@@ -82,10 +82,11 @@ public class MainWindow extends VBox {
             return;
         }
 
-        String response = Rocky.getResponse(input);
-        dialogContainer.getChildren().addAll(
-                DialogBox.getUserDialog(input),
-                DialogBox.getRockyDialog(response));
+        Rocky.Reply reply = Rocky.getReply(input);
+        DialogBox rockyDialog = reply.isError()
+                ? DialogBox.getRockyErrorDialog(reply.text())
+                : DialogBox.getRockyDialog(reply.text());
+        dialogContainer.getChildren().addAll(DialogBox.getUserDialog(input), rockyDialog);
         userInput.clear();
 
         if (Rocky.isExitCommand(input)) {

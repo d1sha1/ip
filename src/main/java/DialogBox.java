@@ -9,6 +9,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
@@ -18,7 +19,9 @@ import javafx.scene.shape.Circle;
  * another person: a command the user typed is echoed as a compact,
  * terminal-style line on the right beside a small picture of Ryland Grace,
  * while Rocky's reply is a wide amber card beside his larger picture, which
- * carries most of the information.
+ * carries most of the information. A reply reporting an error with the
+ * command switches to a dark red alert card with a "!" badge instead, so the
+ * mistake catches the user's attention.
  */
 public class DialogBox extends HBox {
     private static final double ROCKY_AVATAR_SIZE = 44;
@@ -29,9 +32,15 @@ public class DialogBox extends HBox {
     private static final String COMMAND_STYLE =
             "-fx-background-color: #1C1C1E; -fx-text-fill: #9DB7E8; -fx-background-radius: 12;"
                     + " -fx-padding: 4 10 4 10; -fx-font-family: 'Menlo', 'Consolas', monospace;";
+    private static final String CARD_SHAPE_STYLE = " -fx-background-radius: 12; -fx-padding: 10 14 10 14;";
     private static final String REPLY_CARD_STYLE =
-            "-fx-background-color: #E0A040; -fx-text-fill: #1A1208;"
-                    + " -fx-background-radius: 12; -fx-padding: 10 14 10 14;";
+            "-fx-background-color: #E0A040; -fx-text-fill: #1A1208;" + CARD_SHAPE_STYLE;
+    // Errors use a dark red alert card instead of amber, so a mistake catches the user's eye.
+    private static final String ERROR_CARD_STYLE = "-fx-background-color: #3A1113; -fx-text-fill: #FFB4B4;"
+            + " -fx-border-color: #E5484D; -fx-border-width: 2; -fx-border-radius: 12;" + CARD_SHAPE_STYLE;
+    private static final String ERROR_BADGE_TEXT_STYLE = "-fx-text-fill: #FFFFFF; -fx-font-weight: bold;";
+    private static final double ERROR_BADGE_RADIUS = 10;
+    private static final Color ERROR_COLOR = Color.web("#E5484D");
     private static final Color ROCKY_COLOR = Color.web("#E0A040");
     private static final Color USER_COLOR = Color.web("#2B5DAA");
 
@@ -62,18 +71,48 @@ public class DialogBox extends HBox {
     }
 
     /**
-     * Returns a dialog box showing one of Rocky's replies as a card beside his
-     * picture, stretched across the rest of the row.
+     * Returns a dialog box showing one of Rocky's replies, with his picture.
      *
      * @param text the reply to display, which may span several lines.
      */
     public static DialogBox getRockyDialog(String text) {
+        return createRockyDialog(createCard(text, REPLY_CARD_STYLE));
+    }
+
+    /**
+     * Returns a dialog box showing a reply that explains what was wrong with
+     * the user's command, as a dark red alert card with a "!" badge, so the
+     * mistake catches the user's attention.
+     *
+     * @param text the error message to display.
+     */
+    public static DialogBox getRockyErrorDialog(String text) {
+        Label card = createCard(text, ERROR_CARD_STYLE);
+        card.setGraphic(createErrorBadge());
+        card.setGraphicTextGap(10);
+        return createRockyDialog(card);
+    }
+
+    /** Returns a card holding the text, which stretches across the rest of its row. */
+    private static Label createCard(String text, String cardStyle) {
         Label card = new Label(text);
         card.setWrapText(true);
         card.setMaxWidth(Double.MAX_VALUE);
-        card.setStyle(REPLY_CARD_STYLE);
+        card.setStyle(cardStyle);
         HBox.setHgrow(card, Priority.ALWAYS);
+        return card;
+    }
+
+    /** Returns a dialog box with Rocky's picture beside the given card. */
+    private static DialogBox createRockyDialog(Label card) {
         return new DialogBox(Pos.TOP_LEFT, createAvatar(ROCKY_AVATAR, ROCKY_COLOR, ROCKY_AVATAR_SIZE), card);
+    }
+
+    /** Returns a round red "!" badge, the familiar sign that something went wrong. */
+    private static Node createErrorBadge() {
+        Label mark = new Label("!");
+        mark.setStyle(ERROR_BADGE_TEXT_STYLE);
+        return new StackPane(new Circle(ERROR_BADGE_RADIUS, ERROR_COLOR), mark);
     }
 
     /**
