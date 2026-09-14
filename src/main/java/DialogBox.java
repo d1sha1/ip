@@ -1,5 +1,6 @@
 import java.net.URL;
 
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -22,12 +23,20 @@ import javafx.scene.shape.Circle;
  * carries most of the information. A reply reporting an error with the
  * command switches to a dark red alert card with a "!" badge instead, so the
  * mistake catches the user's attention.
+ *
+ * <p>Both sides adapt to the window size: Rocky's cards grow with the window
+ * up to a comfortable reading width, and long commands use more of a wide
+ * window before wrapping.
  */
 public class DialogBox extends HBox {
     private static final double ROCKY_AVATAR_SIZE = 44;
     // The user's picture is smaller than Rocky's, so his replies still carry the visual weight.
     private static final double USER_AVATAR_SIZE = 28;
-    private static final double MAX_COMMAND_WIDTH = 300;
+    // A command wraps at 300px, or at 60% of its row in a wider window.
+    private static final double COMMAND_WRAP_WIDTH = 300;
+    private static final double COMMAND_WIDTH_SHARE = 0.6;
+    // Rocky's cards stop growing here, so lines stay short enough to read comfortably.
+    private static final double MAX_CARD_WIDTH = 640;
     private static final String COMMAND_PROMPT = "> ";
     private static final String COMMAND_STYLE =
             "-fx-background-color: #1C1C1E; -fx-text-fill: #9DB7E8; -fx-background-radius: 12;"
@@ -64,10 +73,14 @@ public class DialogBox extends HBox {
     public static DialogBox getUserDialog(String text) {
         Label command = new Label(COMMAND_PROMPT + text);
         command.setWrapText(true);
-        command.setMaxWidth(MAX_COMMAND_WIDTH);
         command.setStyle(COMMAND_STYLE);
-        return new DialogBox(Pos.CENTER_RIGHT, command,
+        DialogBox dialog = new DialogBox(Pos.CENTER_RIGHT, command,
                 createAvatar(USER_AVATAR, USER_COLOR, USER_AVATAR_SIZE));
+
+        // Bound to the row's width, so the wrapping updates live as the window is resized.
+        command.maxWidthProperty().bind(
+                Bindings.max(dialog.widthProperty().multiply(COMMAND_WIDTH_SHARE), COMMAND_WRAP_WIDTH));
+        return dialog;
     }
 
     /**
@@ -93,11 +106,14 @@ public class DialogBox extends HBox {
         return createRockyDialog(card);
     }
 
-    /** Returns a card holding the text, which stretches across the rest of its row. */
+    /**
+     * Returns a card holding the text, which stretches across the rest of its
+     * row as the window grows, up to a comfortable reading width.
+     */
     private static Label createCard(String text, String cardStyle) {
         Label card = new Label(text);
         card.setWrapText(true);
-        card.setMaxWidth(Double.MAX_VALUE);
+        card.setMaxWidth(MAX_CARD_WIDTH);
         card.setStyle(cardStyle);
         HBox.setHgrow(card, Priority.ALWAYS);
         return card;
