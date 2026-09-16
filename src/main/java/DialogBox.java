@@ -6,6 +6,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -38,8 +39,10 @@ public class DialogBox extends HBox {
     // Rocky's cards stop growing here, so lines stay short enough to read comfortably.
     private static final double MAX_CARD_WIDTH = 640;
     private static final String COMMAND_PROMPT = "> ";
+    // A command looks like a line typed into the ship's console: cyan text on a faintly outlined navy panel.
     private static final String COMMAND_STYLE =
-            "-fx-background-color: #1C1C1E; -fx-text-fill: #9DB7E8; -fx-background-radius: 12;"
+            "-fx-background-color: #101733; -fx-text-fill: #8FE0F0; -fx-background-radius: 12;"
+                    + " -fx-border-color: #24365F; -fx-border-width: 1; -fx-border-radius: 12;"
                     + " -fx-padding: 4 10 4 10; -fx-font-family: 'Menlo', 'Consolas', monospace;";
     private static final String CARD_SHAPE_STYLE = " -fx-background-radius: 12; -fx-padding: 10 14 10 14;";
     private static final String REPLY_CARD_STYLE =
@@ -52,6 +55,10 @@ public class DialogBox extends HBox {
     private static final Color ERROR_COLOR = Color.web("#E5484D");
     private static final Color ROCKY_COLOR = Color.web("#E0A040");
     private static final Color USER_COLOR = Color.web("#2B5DAA");
+    // A soft halo around each picture, like a light source seen in the dark.
+    private static final double AVATAR_GLOW_RADIUS = 8;
+    private static final Color ROCKY_GLOW_COLOR = Color.web("#E0A040", 0.4);
+    private static final Color USER_GLOW_COLOR = Color.web("#8FE0F0", 0.35);
 
     /** Loaded once and shared by every dialog box, instead of being re-read for each message. */
     private static final Image ROCKY_AVATAR = loadImage("/images/Rocky.png");
@@ -75,7 +82,7 @@ public class DialogBox extends HBox {
         command.setWrapText(true);
         command.setStyle(COMMAND_STYLE);
         DialogBox dialog = new DialogBox(Pos.CENTER_RIGHT, command,
-                createAvatar(USER_AVATAR, USER_COLOR, USER_AVATAR_SIZE));
+                createAvatar(USER_AVATAR, USER_COLOR, USER_GLOW_COLOR, USER_AVATAR_SIZE));
 
         // Bound to the row's width, so the wrapping updates live as the window is resized.
         command.maxWidthProperty().bind(
@@ -121,7 +128,7 @@ public class DialogBox extends HBox {
 
     /** Returns a dialog box with Rocky's picture beside the given card. */
     private static DialogBox createRockyDialog(Label card) {
-        return new DialogBox(Pos.TOP_LEFT, createAvatar(ROCKY_AVATAR, ROCKY_COLOR, ROCKY_AVATAR_SIZE), card);
+        return new DialogBox(Pos.TOP_LEFT, createAvatar(ROCKY_AVATAR, ROCKY_COLOR, ROCKY_GLOW_COLOR, ROCKY_AVATAR_SIZE), card);
     }
 
     /** Returns a round red "!" badge, the familiar sign that something went wrong. */
@@ -146,11 +153,16 @@ public class DialogBox extends HBox {
      * the image, or a plain colored circle if the image couldn't be loaded.
      * The square starts at the top because in a portrait the face is usually
      * near the top; in a wide image the square covers the full height anyway.
+     * Either way the picture is given a soft halo in the given glow color, so
+     * it stands out against the dark sky behind the transcript.
      */
-    private static Node createAvatar(Image image, Color placeholderColor, double size) {
+    private static Node createAvatar(Image image, Color placeholderColor, Color glowColor, double size) {
         double radius = size / 2;
+        DropShadow glow = new DropShadow(AVATAR_GLOW_RADIUS, glowColor);
         if (image == null || image.isError()) {
-            return new Circle(radius, placeholderColor);
+            Circle placeholder = new Circle(radius, placeholderColor);
+            placeholder.setEffect(glow);
+            return placeholder;
         }
 
         double side = Math.min(image.getWidth(), image.getHeight());
@@ -160,6 +172,7 @@ public class DialogBox extends HBox {
         avatar.setFitHeight(size);
         avatar.setSmooth(true);
         avatar.setClip(new Circle(radius, radius, radius));
+        avatar.setEffect(glow);
         return avatar;
     }
 }
