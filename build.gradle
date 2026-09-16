@@ -39,6 +39,13 @@ dependencies {
 test {
     useJUnitPlatform()
 
+    // Rocky saves to data/ relative to the working directory, so run the tests in a build
+    // folder, where they can't overwrite the real save file in the project folder.
+    workingDir = layout.buildDirectory.dir('test-run').get().asFile
+    doFirst {
+        workingDir.mkdirs()
+    }
+
     testLogging {
         events 'passed', 'skipped', 'failed'
 

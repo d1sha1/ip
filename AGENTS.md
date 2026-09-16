@@ -38,6 +38,23 @@ in this repository. It covers naming, layout, statement style, and Javadoc/comme
 from that page. When a violation's fix would be a large structural change beyond the task at hand (e.g.
 moving every class into packages), flag it and ask rather than doing it unprompted.
 
+## Testing
+
+JUnit 5 tests live in `src/test/java`, mirroring the package and name of the class under test
+(e.g. `src/main/java/Deadline.java` is tested by `src/test/java/DeadlineTest.java`). Run them with
+`./gradlew test`. When a plain name would be unclear, name test methods
+`featureUnderTest_testScenario_expectedBehavior()`, e.g. `sortList_emptyList_exceptionThrown()`.
+
+* **Coverage target: ~50% of methods.** JUnit tests must cover at least the top ~50% highest-value
+  methods in the codebase, prioritizing complex, core, or critical business logic (e.g. command
+  parsing and dispatch in `Rocky.getResponse`, date parsing, save-file loading and saving) over
+  trivial getters, simple delegation, and GUI layout code.
+* **Update the tests after every code change.** Whenever code is added, changed, or removed, add,
+  update, or remove JUnit tests in the same change so the codebase still meets the ~50% target, and
+  run `./gradlew test` to confirm they all pass before considering the change done.
+* Tests must never touch the real save files. The Gradle `test` task runs in `build/test-run/`, so
+  any `data/` folder Rocky creates during tests ends up there instead of in the project folder.
+
 ## Git
 
 Use lightweight tags unless the user requests an annotated tag.
