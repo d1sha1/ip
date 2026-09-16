@@ -1,9 +1,10 @@
 # Rocky
 
-Inspired by Rocky from *Project Hail Mary*, Rocky is an assistant that helps you
-manage your tasks. You type plain-text commands into a chat window, and Rocky
-keeps track of your to-dos, deadlines, events, and spending — saving everything
-to disk, so your list is still there the next time you start him up.
+Inspired by Rocky from *Project Hail Mary*. The theme and chat replies are
+inspired by this character. Rocky is an assistant that helps you manage your
+tasks. You type plain-text commands into a chat window, and Rocky keeps track of
+your to-dos, deadlines, events, and spending — saving everything to disk, so your
+list is still there the next time you start him up.
 
 ![Rocky's chat window](Ui.png)
 
