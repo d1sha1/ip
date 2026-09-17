@@ -1,3 +1,5 @@
+package rocky.task;
+
 /**
  * The three kinds of task Rocky understands, and the command keyword and
  * on-disk save-file icon that identify each one.

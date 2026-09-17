@@ -1,7 +1,11 @@
+package rocky.expense;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+
+import rocky.RockyException;
 
 /**
  * One recorded expense: what the money was spent on, how much, which

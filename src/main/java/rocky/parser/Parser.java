@@ -1,5 +1,15 @@
+package rocky.parser;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import rocky.RockyException;
+import rocky.expense.Expense;
+import rocky.task.Deadline;
+import rocky.task.Event;
+import rocky.task.Task;
+import rocky.task.TaskType;
+import rocky.task.ToDo;
 
 /**
  * Makes sense of the command lines the user types, turning their text into

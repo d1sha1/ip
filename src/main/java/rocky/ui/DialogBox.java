@@ -1,3 +1,5 @@
+package rocky.ui;
+
 import java.net.URL;
 
 import javafx.beans.binding.Bindings;

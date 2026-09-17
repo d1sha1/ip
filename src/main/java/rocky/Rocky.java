@@ -1,5 +1,16 @@
+package rocky;
+
 import java.io.File;
 import java.util.List;
+
+import rocky.expense.Expense;
+import rocky.expense.ExpenseList;
+import rocky.parser.Parser;
+import rocky.storage.Storage;
+import rocky.task.Task;
+import rocky.task.TaskList;
+import rocky.task.TaskType;
+import rocky.ui.Ui;
 
 /**
  * Core of Rocky, a simple chatbot for tracking todos, deadlines, and events,

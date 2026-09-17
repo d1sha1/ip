@@ -1,3 +1,5 @@
+package rocky.ui;
+
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -11,6 +13,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+
+import rocky.Rocky;
 
 /**
  * The chat window: a scrolling transcript of dialog boxes above a text field
