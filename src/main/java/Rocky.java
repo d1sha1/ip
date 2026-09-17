@@ -3,8 +3,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-
 
 /**
  * Core of Rocky, a simple chatbot for tracking todos, deadlines, and events,
@@ -16,14 +14,6 @@ import java.util.Scanner;
  * {@code data/} after every change.
  */
 public class Rocky {
-    private static final String LINE =
-            "    ____________________________________________________________";
-    private static final String BANNER =
-            " ____   ___   ____ _  ______   __\n"
-                    + "|  _ \\ / _ \\ / ___| |/ /\\ \\ / /\n"
-                    + "| |_) | | | | |   | ' /  \\ V / \n"
-                    + "|  _ <| |_| | |___| . \\   | |  \n"
-                    + "|_| \\_\\\\___/ \\____|_|\\_\\  |_|  \n";
     private static final ArrayList<Task> tasks = new ArrayList<>();
     private static final String DATA_DIR = "data";
     private static final String DATA_FILE = "duke.txt";
@@ -176,34 +166,19 @@ public class Rocky {
         // Load any previously saved tasks before greeting the user.
         initialize();
 
-        System.out.println(LINE);
-        System.out.println(BANNER);
-        printIndented(getGreeting());
-        System.out.println(LINE);
+        Ui ui = new Ui();
+        ui.showWelcome(getGreeting());
 
-        Scanner scanner = new Scanner(System.in);
-
-        while (scanner.hasNextLine()) {
-            String input = scanner.nextLine();
-            String response = getResponse(input);
-
-            System.out.println(LINE);
-            printIndented(response);
-            System.out.println(LINE);
+        while (ui.hasNextCommand()) {
+            String input = ui.readCommand();
+            ui.showReply(getResponse(input));
 
             if (isExitCommand(input)) {
                 break;
             }
         }
 
-        scanner.close();
-    }
-
-    /** Prints a possibly multi-line reply, indented to match the text UI's layout. */
-    private static void printIndented(String text) {
-        for (String line : text.split("\n")) {
-            System.out.println("     " + line);
-        }
+        ui.close();
     }
 
     /** Returns every task in the list, or a friendly message if it's empty. */
