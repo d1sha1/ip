@@ -130,7 +130,8 @@ public class DialogBox extends HBox {
 
     /** Returns a dialog box with Rocky's picture beside the given card. */
     private static DialogBox createRockyDialog(Label card) {
-        return new DialogBox(Pos.TOP_LEFT, createAvatar(ROCKY_AVATAR, ROCKY_COLOR, ROCKY_GLOW_COLOR, ROCKY_AVATAR_SIZE), card);
+        Node avatar = createAvatar(ROCKY_AVATAR, ROCKY_COLOR, ROCKY_GLOW_COLOR, ROCKY_AVATAR_SIZE);
+        return new DialogBox(Pos.TOP_LEFT, avatar, card);
     }
 
     /** Returns a round red "!" badge, the familiar sign that something went wrong. */
