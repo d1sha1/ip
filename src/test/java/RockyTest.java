@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 public class RockyTest {
     private static final Path SAVE_FILE = Path.of("data", "duke.txt");
     private static final String EMPTY_LIST_REPLY = "Your list is empty. Add something!";
+    private static final String TODO_ADDED_REPLY = "New task. Do not worry. I remember it for you.";
 
     /** Stops the tests if they would overwrite the real save file in the project folder. */
     @BeforeAll
@@ -43,15 +44,15 @@ public class RockyTest {
 
     @Test
     public void getResponse_todo_taskAddedAndCounted() {
-        assertEquals("Got it. I've added this task:\n  [T][ ] read book\nNow you have 1 task in the list.",
+        assertEquals(TODO_ADDED_REPLY + "\n  [T][ ] read book\nNow you have 1 task in the list.",
                 Rocky.getResponse("todo read book"));
-        assertEquals("Got it. I've added this task:\n  [T][ ] return book\nNow you have 2 tasks in the list.",
+        assertEquals(TODO_ADDED_REPLY + "\n  [T][ ] return book\nNow you have 2 tasks in the list.",
                 Rocky.getResponse("todo return book"));
     }
 
     @Test
     public void getResponse_extraWhitespace_ignored() {
-        assertEquals("Got it. I've added this task:\n  [T][ ] read book\nNow you have 1 task in the list.",
+        assertEquals(TODO_ADDED_REPLY + "\n  [T][ ] read book\nNow you have 1 task in the list.",
                 Rocky.getResponse("   todo read book   "));
     }
 
@@ -64,7 +65,7 @@ public class RockyTest {
 
     @Test
     public void getResponse_deadline_taskAddedWithFormattedDate() {
-        assertEquals("Got it. I've added this task:\n  [D][ ] return book (by: Dec 01 2019)"
+        assertEquals("Task with deadline. I track time carefully.\n  [D][ ] return book (by: Dec 01 2019)"
                 + "\nNow you have 1 task in the list.",
                 Rocky.getResponse("deadline return book /by 2019-12-01"));
     }
@@ -87,7 +88,8 @@ public class RockyTest {
 
     @Test
     public void getResponse_event_taskAddedWithFormattedDates() {
-        assertEquals("Got it. I've added this task:\n  [E][ ] meeting (from: Dec 02 2019 to: Dec 03 2019)"
+        assertEquals("Task spans two times. Start and end. I mark both."
+                + "\n  [E][ ] meeting (from: Dec 02 2019 to: Dec 03 2019)"
                 + "\nNow you have 1 task in the list.",
                 Rocky.getResponse("event meeting /from 2019-12-02 /to 2019-12-03"));
     }
@@ -115,7 +117,7 @@ public class RockyTest {
         Rocky.getResponse("todo read book");
         Rocky.getResponse("deadline return book /by 2019-12-01");
 
-        assertEquals("Here are the tasks in your list:\n1.[T][ ] read book"
+        assertEquals("Here is everything. Rocky show full list now\n1.[T][ ] read book"
                 + "\n2.[D][ ] return book (by: Dec 01 2019)", Rocky.getResponse("list"));
     }
 
@@ -123,9 +125,10 @@ public class RockyTest {
     public void getResponse_markThenUnmark_doneStateChanges() {
         Rocky.getResponse("todo read book");
 
-        assertEquals("Nice! I've marked this task as done:\n  [T][x] read book", Rocky.getResponse("mark 1"));
-        assertEquals("Here are the tasks in your list:\n1.[T][x] read book", Rocky.getResponse("list"));
-        assertEquals("OK, I've marked this task as not done yet:\n  [T][ ] read book",
+        assertEquals("Task complete! Good good good. I record success.\n  [T][x] read book",
+                Rocky.getResponse("mark 1"));
+        assertEquals("Here is everything. Rocky show full list now\n1.[T][x] read book", Rocky.getResponse("list"));
+        assertEquals("Task not complete. I undo the mark.\n  [T][ ] read book",
                 Rocky.getResponse("unmark 1"));
     }
 
@@ -158,9 +161,9 @@ public class RockyTest {
         Rocky.getResponse("todo read book");
         Rocky.getResponse("todo return book");
 
-        assertEquals("Noted. I've removed this task:\n  [T][ ] read book\nNow you have 1 task in the list.",
+        assertEquals("Task removed. Gone.\n  [T][ ] read book\nNow you have 1 task in the list.",
                 Rocky.getResponse("delete 1"));
-        assertEquals("Here are the tasks in your list:\n1.[T][ ] return book", Rocky.getResponse("list"));
+        assertEquals("Here is everything. Rocky show full list now\n1.[T][ ] return book", Rocky.getResponse("list"));
     }
 
     @Test
@@ -169,7 +172,7 @@ public class RockyTest {
         Rocky.getResponse("todo buy milk");
         Rocky.getResponse("deadline return book /by 2019-12-01");
 
-        assertEquals("Here are the matching tasks in your list:\n1.[T][ ] read book"
+        assertEquals("Searching... I compare each task to your word. Matches only.\n1.[T][ ] read book"
                 + "\n2.[D][ ] return book (by: Dec 01 2019)", Rocky.getResponse("find BOOK"));
     }
 
@@ -195,7 +198,7 @@ public class RockyTest {
 
     @Test
     public void getResponse_bye_farewellShown() {
-        assertEquals("Bye. Hope to see you again soon!", Rocky.getResponse("bye"));
+        assertEquals("Goodbye, friend. I power down now. Talk later.", Rocky.getResponse("bye"));
     }
 
     @Test
@@ -231,7 +234,7 @@ public class RockyTest {
                 "E | 0 | meeting | 2019-12-02 | 2019-12-03"));
 
         Rocky.initialize();
-        String expected = "Here are the tasks in your list:\n1.[T][x] read book"
+        String expected = "Here is everything. Rocky show full list now\n1.[T][x] read book"
                 + "\n2.[E][ ] meeting (from: Dec 02 2019 to: Dec 03 2019)";
         assertEquals(expected, Rocky.getResponse("list"));
 
