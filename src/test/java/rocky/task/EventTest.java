@@ -1,8 +1,12 @@
+package rocky.task;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
+
+import rocky.RockyException;
 
 /** Tests for creating an {@link Event} from typed start/end dates, and for how it is displayed. */
 public class EventTest {

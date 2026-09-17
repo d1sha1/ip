@@ -1,3 +1,5 @@
+package rocky.ui;
+
 import java.util.Random;
 
 import javafx.scene.canvas.Canvas;

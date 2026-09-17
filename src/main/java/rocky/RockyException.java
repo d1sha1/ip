@@ -1,3 +1,5 @@
+package rocky;
+
 /**
  * Signals a problem with user input or with reading/writing saved data
  * that Rocky can recover from by showing the user a friendly message,

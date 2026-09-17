@@ -1,6 +1,10 @@
+package rocky.task;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+
+import rocky.RockyException;
 
 /** A task with a single due date, e.g. "return book (by: Dec 01 2019)". */
 public class Deadline extends Task {

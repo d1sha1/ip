@@ -1,3 +1,5 @@
+package rocky.expense;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -6,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+
+import rocky.RockyException;
 
 /**
  * The expenses the user has recorded, in the order they were added. The

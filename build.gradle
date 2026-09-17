@@ -58,7 +58,7 @@ test {
 }
 
 application {
-    mainClass = 'Launcher'
+    mainClass = 'rocky.ui.Launcher'
 }
 
 jar {
