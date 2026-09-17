@@ -1,7 +1,6 @@
 import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,7 +13,7 @@ import java.util.List;
  * {@code data/} after every change.
  */
 public class Rocky {
-    private static final ArrayList<Task> tasks = new ArrayList<>();
+    private static final TaskList tasks = new TaskList();
     private static final String DATA_DIR = "data";
     private static final String DATA_FILE = "duke.txt";
     private static final String COMMAND_BYE = "bye";
@@ -186,7 +185,7 @@ public class Rocky {
         if (tasks.isEmpty()) {
             return "Your list is empty. Add something!";
         }
-        return formatNumberedList(REPLY_LIST, tasks);
+        return formatNumberedList(REPLY_LIST, tasks.getTasks());
     }
 
     /**
@@ -204,12 +203,7 @@ public class Rocky {
                     "What should I search for? Try again, e.g.: find book");
         }
 
-        ArrayList<Task> matches = new ArrayList<>();
-        for (Task task : tasks) {
-            if (task.getDescription().toLowerCase().contains(keyword.toLowerCase())) {
-                matches.add(task);
-            }
-        }
+        List<Task> matches = tasks.find(keyword);
 
         if (matches.isEmpty()) {
             return "No matching tasks found.";
@@ -272,7 +266,7 @@ public class Rocky {
         assert !task.getDescription().isEmpty() : "a new task should always have a description";
 
         tasks.add(task);
-        storage.save(tasks);
+        storage.save(tasks.getTasks());
         return getAddedReply(type) + "\n  " + task
                 + "\nNow you have " + describeCount(tasks.size(), "task") + " in the list.";
     }
@@ -337,7 +331,7 @@ public class Rocky {
     private static String deleteTask(String input) throws RockyException {
         int index = parseIndex(input, tasks.size(), "list", "task");
         Task removed = tasks.remove(index);
-        storage.save(tasks);
+        storage.save(tasks.getTasks());
         return REPLY_DELETED + "\n  " + removed
                 + "\nNow you have " + describeCount(tasks.size(), "task") + " in the list.";
     }
@@ -368,7 +362,7 @@ public class Rocky {
         // The reply and the save file both report this state, so it must match what was asked for.
         assert task.isDone() == isDone : "task's done state should now match the command";
 
-        storage.save(tasks);
+        storage.save(tasks.getTasks());
         return message + "\n  " + task;
     }
 
