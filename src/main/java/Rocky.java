@@ -1,7 +1,4 @@
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -57,6 +54,7 @@ public class Rocky {
     private static final String REPLY_EXPENSES = "All spending, here. I show you where resources went.";
     private static final String REPLY_EXPENSE_DELETED = "Expense record removed. I forget this transaction.";
     private static final String REPLY_BYE = "Goodbye, friend. I power down now. Talk later.";
+    private static final Storage storage = new Storage(new File(DATA_DIR, DATA_FILE));
     private static final ExpenseList expenses = new ExpenseList(new File(DATA_DIR, EXPENSE_FILE));
     private static boolean isLoaded = false;
 
@@ -80,7 +78,7 @@ public class Rocky {
      */
     public static void initialize() {
         if (!isLoaded) {
-            load();
+            tasks.addAll(storage.load());
             expenses.load();
             isLoaded = true;
         }
@@ -299,7 +297,7 @@ public class Rocky {
         assert !task.getDescription().isEmpty() : "a new task should always have a description";
 
         tasks.add(task);
-        save();
+        storage.save(tasks);
         return getAddedReply(type) + "\n  " + task
                 + "\nNow you have " + describeCount(tasks.size(), "task") + " in the list.";
     }
@@ -364,7 +362,7 @@ public class Rocky {
     private static String deleteTask(String input) throws RockyException {
         int index = parseIndex(input, tasks.size(), "list", "task");
         Task removed = tasks.remove(index);
-        save();
+        storage.save(tasks);
         return REPLY_DELETED + "\n  " + removed
                 + "\nNow you have " + describeCount(tasks.size(), "task") + " in the list.";
     }
@@ -395,7 +393,7 @@ public class Rocky {
         // The reply and the save file both report this state, so it must match what was asked for.
         assert task.isDone() == isDone : "task's done state should now match the command";
 
-        save();
+        storage.save(tasks);
         return message + "\n  " + task;
     }
 
@@ -532,149 +530,4 @@ public class Rocky {
     private static String describeCount(int count, String itemName) {
         return count + " " + itemName + (count == 1 ? "" : "s");
     }
-
-    /**
-     * Loads previously saved tasks from {@code data/duke.txt} into
-     * {@link #tasks}. Does nothing if the file doesn't exist yet (e.g. first
-     * run). A line that can't be parsed is skipped with a warning, without
-     * stopping the rest of the file from loading.
-     */
-    private static void load() {
-        File file = new File(DATA_DIR, DATA_FILE);
-        if (!file.exists()) {
-            return;
-        }
-
-        try (Scanner fileScanner = new Scanner(file)) {
-            while (fileScanner.hasNextLine()) {
-                String line = fileScanner.nextLine().trim();
-                if (!line.isEmpty()) {
-                    try {
-                        tasks.add(lineToTask(line));
-                    } catch (RockyException e) {
-                        System.out.println("     Warning: skipped an unreadable saved task.");
-                    }
-                }
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("     Warning: couldn't read saved tasks.");
-        }
-    }
-
-    /**
-     * Saves {@link #tasks} to {@code data/duke.txt}, overwriting whatever
-     * was there before. Creates the data folder/file first if they don't
-     * exist yet.
-     */
-    private static void save() {
-        try {
-            File file = ensureDataFile(DATA_DIR, DATA_FILE);
-            try (FileWriter writer = new FileWriter(file)) {
-                for (Task task : tasks) {
-                    writer.write(taskToLine(task) + System.lineSeparator());
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("     Warning: couldn't save tasks (" + e.getMessage() + ").");
-        }
-    }
-
-    /**
-     * Converts a task to its one-line save-file representation, e.g.
-     * {@code "D | 0 | return book | 2019-12-01"}.
-     *
-     * @param task the task to encode.
-     * @return the line to write to the save file for this task.
-     */
-    private static String taskToLine(Task task) {
-        String done = task.isDone() ? "1" : "0";
-        String line = " | " + done + " | " + task.getDescription();
-
-        if (task instanceof Deadline) {
-            Deadline deadline = (Deadline) task;
-            return TaskType.DEADLINE.getIcon() + line + " | " + deadline.getDate();
-        } else if (task instanceof Event) {
-            Event event = (Event) task;
-            return TaskType.EVENT.getIcon() + line + " | " + event.getStartDate()
-                    + " | " + event.getEndDate();
-        } else {
-            return TaskType.TODO.getIcon() + line;
-        }
-    }
-
-    /**
-     * Parses one save-file line back into a Task.
-     *
-     * @param line a line previously produced by {@link #taskToLine}.
-     * @return the reconstructed task, with its done state restored.
-     * @throws RockyException if the line is malformed, e.g. missing fields
-     *     or an unparsable date.
-     */
-    private static Task lineToTask(String line) throws RockyException {
-        String[] fields = line.split("\\|");
-        TaskType type = TaskType.fromIcon(getField(fields, 0));
-        if (type == null) {
-            throw new RockyException("A saved task has an unknown type.");
-        }
-
-        boolean isDone = getField(fields, 1).equals("1");
-        String description = getField(fields, 2);
-
-        Task task;
-        switch (type) {
-            case TODO:
-                task = new ToDo(description);
-                break;
-            case DEADLINE:
-                task = new Deadline(description, getField(fields, 3));
-                break;
-            case EVENT:
-                task = new Event(description, getField(fields, 3), getField(fields, 4));
-                break;
-            default:
-                throw new RockyException("I don't know how to load that kind of task.");
-        }
-
-        if (isDone) {
-            task.mark();
-        }
-        return task;
-    }
-
-    /**
-     * Returns one trimmed field of a split save-file line.
-     *
-     * @param fields the line's fields, split on "|".
-     * @param position which field to return, counting from 0.
-     * @throws RockyException if the line has no field at that position.
-     */
-    private static String getField(String[] fields, int position) throws RockyException {
-        if (position >= fields.length) {
-            throw new RockyException("A saved task is missing some of its details.");
-        }
-        return fields[position].trim();
-    }
-
-    /**
-     * Ensures the save folder and file exist, creating them if necessary.
-     *
-     * @param folderName the folder the save file should live in, e.g. "data".
-     * @param fileName the save file's name, e.g. "duke.txt".
-     * @return the (now guaranteed to exist) save file.
-     * @throws IOException if the folder or file can't be created.
-     */
-    private static File ensureDataFile(String folderName, String fileName) throws IOException {
-        File folder = new File(folderName);
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
-
-        File file = new File(folder, fileName);
-        if (!file.exists()) {
-            file.createNewFile();
-        }
-
-        return file;
-    }
-
 }
